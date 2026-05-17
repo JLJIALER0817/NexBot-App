@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Nexbot Fleet Management</title>
   
   <!-- Tailwind CSS CDN -->
@@ -18,7 +18,6 @@
         extend: {
           colors: {
             gray: {
-              // 显式扩展深色值，防止浏览器因找不到类而 fallback 渲染成白色/浅灰色亮边框
               850: '#151c2c', 
             }
           },
@@ -81,11 +80,55 @@
     .radar-pulse {
       animation: radar-ping 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
     }
+
+    /* High-fidelity CSS overrides for ultra-small viewports (like iPhone SE/320px width) */
+    @media (max-width: 380px) {
+      .mobile-card-padding {
+        padding: 0.75rem !important;
+      }
+      .mobile-gap-reduction {
+        gap: 0.5rem !important;
+      }
+      .mobile-text-shrink {
+        font-size: 8px !important;
+      }
+      .mobile-title-shrink {
+        font-size: 10px !important;
+      }
+      .mobile-circle-shrink {
+        width: 52px !important;
+        height: 52px !important;
+      }
+      .mobile-avatar-shrink {
+        width: 58px !important;
+        height: 74px !important;
+      }
+    }
+
+    @media (max-width: 340px) {
+      .mobile-card-padding {
+        padding: 0.5rem !important;
+      }
+      .mobile-gap-reduction {
+        gap: 0.35rem !important;
+      }
+      .mobile-text-shrink {
+        font-size: 7.5px !important;
+      }
+      .mobile-circle-shrink {
+        width: 44px !important;
+        height: 44px !important;
+      }
+      .mobile-avatar-shrink {
+        width: 52px !important;
+        height: 66px !important;
+      }
+    }
   </style>
 </head>
 <body class="h-[100dvh] w-full bg-[#070b14] sm:bg-[#000000] text-white font-sans flex justify-center overflow-hidden selection:bg-blue-500/30">
 
-  <!-- Main Mobile Container Frame (Borders completely removed to avoid any outer frame borders) -->
+  <!-- Main Mobile Container Frame (Perfect edge-to-edge adaptive screen container) -->
   <div class="w-full max-w-[480px] h-full bg-[#070b14] relative flex flex-col shadow-2xl overflow-hidden">
     
     <!-- App Header -->
@@ -98,36 +141,36 @@
       <!-- Views are rendered inside this section dynamically -->
     </main>
 
-    <!-- Bottom Navigation Bar (Matching exact screenshot layouts and counts) -->
-    <nav class="sticky bottom-0 w-full bg-[#070b14]/95 backdrop-blur-lg border-t border-gray-800/80 px-2 pb-safe pt-2 flex justify-between items-end z-40">
+    <!-- Bottom Navigation Bar (No wrap guaranteed on small phones) -->
+    <nav class="sticky bottom-0 w-full bg-[#070b14]/95 backdrop-blur-lg border-t border-gray-800/80 px-1 pb-safe pt-2 flex justify-between items-end z-40">
       <button onclick="navigate('dashboard')" id="nav-dashboard" class="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl mb-1 mx-0.5 transition-all-300">
         <i data-lucide="home" class="w-5 h-5"></i>
-        <span class="text-[9px] font-medium">Dashboard</span>
+        <span class="text-[9px] font-medium whitespace-nowrap">Dashboard</span>
       </button>
       
       <button onclick="navigate('robots')" id="nav-robots" class="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl mb-1 mx-0.5 transition-all-300">
         <i data-lucide="bot" class="w-5 h-5"></i>
-        <span class="text-[9px] font-medium">Robots</span>
+        <span class="text-[9px] font-medium whitespace-nowrap">Robots</span>
       </button>
       
       <button onclick="openDispatchModal()" id="nav-create" class="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl mb-1 mx-0.5 transition-all-300 text-gray-500 hover:text-gray-300">
         <div class="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-[0_2px_12px_rgba(37,99,235,0.4)] hover:bg-blue-500 transition-transform active:scale-95">
           <i data-lucide="plus" class="w-5 h-5"></i>
         </div>
-        <span class="text-[9px] font-medium">Create Task</span>
+        <span class="text-[9px] font-medium whitespace-nowrap">Create Task</span>
       </button>
       
       <!-- Tasks button configured with dynamic 16 count badge matching screenshot -->
       <button onclick="navigate('tasks')" id="nav-tasks" class="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 transition-colors mb-1 mx-0.5 relative text-gray-500 hover:text-gray-300">
-        <div class="absolute top-0.5 right-[18%] bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-[#070b14] leading-none">16</div>
+        <div class="absolute top-0.5 right-[15%] bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-[#070b14] leading-none">16</div>
         <i data-lucide="clipboard-list" class="w-5 h-5"></i>
-        <span class="text-[9px] font-medium">Tasks</span>
+        <span class="text-[9px] font-medium whitespace-nowrap">Tasks</span>
       </button>
       
       <button onclick="navigate('settings')" id="nav-settings" class="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl mb-1 mx-0.5 transition-all-300 relative">
-        <div class="absolute top-1.5 right-[30%] w-1.5 h-1.5 bg-red-500 rounded-full border border-[#070b14]"></div>
+        <div class="absolute top-1.5 right-[25%] w-1.5 h-1.5 bg-red-500 rounded-full border border-[#070b14]"></div>
         <i data-lucide="more-horizontal" class="w-5 h-5"></i>
-        <span class="text-[9px] font-medium">More</span>
+        <span class="text-[9px] font-medium whitespace-nowrap">More</span>
       </button>
     </nav>
 
@@ -177,7 +220,7 @@
           </div>
 
           <div>
-            <label class="block text-xs text-gray-400 mb-1.5 font-medium">Payload Weight estimate (kg)</label>
+            <label class="block text-xs text-gray-400 mb-1.5 font-medium">Payload Weight (kg)</label>
             <input id="dispatch-payload" type="number" min="0" max="20" value="3" class="w-full bg-[#161f30] border border-gray-800 text-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
           </div>
           
@@ -225,43 +268,24 @@
       
       return `
         <svg viewBox="0 0 100 130" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <!-- Background glow shadow -->
           <ellipse cx="50" cy="115" rx="30" ry="8" fill="rgba(0,0,0,0.5)" />
-          
-          <!-- Robot body chassis (Premium Metallic Dark Blue & Silver-gray) -->
           <rect x="22" y="30" width="56" height="80" rx="14" fill="#1e293b" stroke="#475569" stroke-width="2.5" />
           <rect x="26" y="34" width="48" height="72" rx="10" fill="#0f172a" />
-          
-          <!-- Layer Trays (Doorless delivery compartments) -->
-          <!-- Tray 1 -->
           <rect x="30" y="44" width="40" height="14" rx="3" fill="#1e293b" stroke="#334155" />
           <line x1="30" y1="51" x2="70" y2="51" stroke="#475569" stroke-width="1" />
-          
-          <!-- Tray 2 -->
           <rect x="30" y="64" width="40" height="14" rx="3" fill="#1e293b" stroke="#334155" />
           <line x1="30" y1="71" x2="70" y2="71" stroke="#475569" stroke-width="1" />
-          
-          <!-- Tray 3 -->
           <rect x="30" y="84" width="40" height="14" rx="3" fill="#1e293b" stroke="#334155" />
           <line x1="30" y1="91" x2="70" y2="91" stroke="#475569" stroke-width="1" />
-          
-          <!-- Upper Head Console & Control Screen -->
           <path d="M 28 30 L 72 30 L 66 12 L 34 12 Z" fill="#334155" stroke="#475569" stroke-width="2" />
           <rect x="38" y="16" width="24" height="10" rx="2" fill="#000" stroke="#64748b" />
-          <!-- Screen Info Indicator lights -->
           <circle cx="44" cy="21" r="1.5" fill="${indicatorColor}" />
           <circle cx="50" cy="21" r="1.5" fill="${indicatorColor}" />
           <circle cx="56" cy="21" r="1.5" fill="${indicatorColor}" />
-          
-          <!-- Top LiDAR Turret Cap (Autonomous Driving Kit) -->
           <rect x="42" y="4" width="16" height="8" rx="2" fill="#020617" stroke="#475569" stroke-width="1.5" />
           <rect x="45" y="1" width="10" height="3" rx="1" fill="${lidGlow}" />
-          
-          <!-- Side Status Glow strip lines -->
           <path d="M 22 55 L 22 85" stroke="${lidGlow}" stroke-width="3" stroke-linecap="round" />
           <path d="M 78 55 L 78 85" stroke="${lidGlow}" stroke-width="3" stroke-linecap="round" />
-          
-          <!-- Heavy-duty Base wheels -->
           <rect x="25" y="108" width="12" height="8" rx="3" fill="#334155" />
           <rect x="63" y="108" width="12" height="8" rx="3" fill="#334155" />
         </svg>
@@ -350,7 +374,6 @@
       const listContainer = document.getElementById('robots-list-container');
       if (listContainer) {
         updateRobotsDynamic();
-        // Re-active Tab Line Indicators
         const tabs = ['all', 'online', 'busy', 'offline', 'charging'];
         tabs.forEach((tName) => {
           const indicator = document.getElementById(`tab-indicator-${tName}`);
@@ -717,25 +740,25 @@
             </div>
           </div>
 
-          <!-- Highlight Robot Showcase Component (Borders configured) -->
-          <div class="bg-[#121929] rounded-2xl border border-gray-850 p-4 shrink-0">
+          <!-- Highlight Robot Showcase Component (Highly Responsive Structure) -->
+          <div class="bg-[#121929] rounded-2xl border border-gray-850 p-4 mobile-card-padding shrink-0">
             <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
               Robot Highlight
             </h2>
-            <div class="flex items-stretch gap-3 mb-4">
-              <div id="highlight-avatar" class="w-[60px] h-[86px] shrink-0"></div>
+            <div class="flex items-stretch gap-3 mobile-gap-reduction mb-4">
+              <div id="highlight-avatar" class="w-[54px] xs:w-[60px] h-[86px] shrink-0"></div>
               
               <div class="flex-1 min-w-0 flex flex-col justify-center py-0.5">
                 <div class="flex items-center gap-1.5 mb-1.5">
-                  <h3 id="highlight-id" class="text-lg font-bold text-white leading-none">R2-03</h3>
+                  <h3 id="highlight-id" class="text-base xs:text-lg font-bold text-white leading-none">R2-03</h3>
                   <div id="highlight-status-pill" class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] border transition-colors bg-green-500/10 text-green-400 border-green-500/20">
                     <div class="w-1 h-1 rounded-full bg-green-500"></div>
                     <span class="capitalize text-[8px] font-bold">Online</span>
                   </div>
                 </div>
                 
-                <div class="grid grid-cols-[55px_1fr] gap-x-1 gap-y-1.5 text-[10px]">
-                  <span class="text-gray-500 font-medium">Model</span><span class="text-gray-200 font-semibold">NEXBOT Pro</span>
+                <div class="grid grid-cols-[50px_1fr] gap-x-1 gap-y-1 text-[9px] xs:text-[10px] mobile-text-shrink">
+                  <span class="text-gray-500 font-medium">Model</span><span class="text-gray-200 font-semibold whitespace-nowrap truncate">NEXBOT Pro</span>
                   <span class="text-gray-500 font-medium">Battery</span>
                   <div class="flex items-center gap-1.5">
                     <span id="highlight-battery-percent" class="text-gray-200 font-bold w-5">86%</span>
@@ -748,12 +771,13 @@
                 </div>
               </div>
 
-              <div class="w-[110px] shrink-0 relative bg-[#1e293b] rounded-xl overflow-hidden border border-gray-700">
+              <!-- Camera View frame -->
+              <div class="w-[90px] xs:w-[110px] shrink-0 relative bg-[#1e293b] rounded-xl overflow-hidden border border-gray-700">
                 <div id="highlight-camera-live" class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600')] bg-cover bg-center mix-blend-normal transition-opacity duration-1000" style="opacity: 0.9"></div>
                 <div class="absolute inset-0 bg-gradient-to-t from-[#121929]/50 to-transparent"></div>
                 <div id="highlight-camera-status" class="absolute top-1 left-1.5 flex items-center gap-1 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-[7px] text-gray-200 border border-white/10">
-                  <div class="w-1 h-1 rounded-full bg-green-500 animate-pulse"></div>
-                  <span>Live Camera</span>
+                  <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                  <span class="font-bold text-[7px] uppercase whitespace-nowrap">Live Camera</span>
                 </div>
               </div>
             </div>
@@ -763,13 +787,13 @@
             </button>
           </div>
 
-          <!-- Charts Sections with customized dark borders -->
-          <div class="grid grid-cols-2 gap-4 shrink-0">
-            <!-- Tasks Overview -->
-            <div class="bg-[#121929] rounded-2xl border border-gray-850 p-3 relative flex flex-col justify-between">
-              <h3 class="text-xs font-semibold text-gray-200 tracking-wide">Tasks Overview</h3>
-              <div class="flex items-center gap-3 my-2">
-                <div class="relative w-[70px] h-[70px] shrink-0">
+          <!-- Charts Sections with customized fluid layouts to prevent text wrapping -->
+          <div class="grid grid-cols-2 gap-3 mobile-gap-reduction shrink-0">
+            <!-- Tasks Overview Card -->
+            <div class="bg-[#121929] rounded-2xl border border-gray-850 p-3 mobile-card-padding relative flex flex-col justify-between">
+              <h3 class="text-xs font-semibold text-gray-200 tracking-wide mobile-title-shrink">Tasks Overview</h3>
+              <div class="flex items-center gap-2 mobile-gap-reduction my-2">
+                <div class="relative w-[50px] h-[50px] xs:w-[64px] xs:h-[64px] sm:w-[70px] sm:h-[70px] shrink-0">
                   <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
                     <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="12" />
                     <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="12" stroke-dasharray="160 251" stroke-dashoffset="0" />
@@ -777,41 +801,41 @@
                     <circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" stroke-width="12" stroke-dasharray="20 251" stroke-dashoffset="-210" />
                   </svg>
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span id="tasks-total-center" class="text-sm font-bold text-white">162</span>
-                    <span class="text-[8px] text-gray-500 font-semibold uppercase">Total</span>
+                    <span id="tasks-total-center" class="text-xs xs:text-sm font-bold text-white">162</span>
+                    <span class="text-[6.5px] xs:text-[8px] text-gray-500 font-semibold uppercase leading-none">Total</span>
                   </div>
                 </div>
                 
-                <div class="flex-1 space-y-0.5 text-[8px]">
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div><span class="text-gray-400">In Progress</span></div>
-                    <span class="text-blue-400 font-bold">16 (32%)</span>
+                <div class="flex-1 space-y-0.5 text-[7.5px] xs:text-[8.5px] mobile-text-shrink min-w-0">
+                  <div class="flex justify-between items-center gap-1">
+                    <div class="flex items-center gap-1 min-w-0"><div class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></div><span class="text-gray-400 truncate">In Progress</span></div>
+                    <span class="text-blue-400 font-bold shrink-0">16</span>
                   </div>
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-slate-500"></div><span class="text-gray-400">Pending</span></div>
-                    <span class="text-slate-400 font-bold">12 (24%)</span>
+                  <div class="flex justify-between items-center gap-1">
+                    <div class="flex items-center gap-1 min-w-0"><div class="w-1.5 h-1.5 rounded-full bg-slate-500 shrink-0"></div><span class="text-gray-400 truncate">Pending</span></div>
+                    <span class="text-slate-400 font-bold shrink-0">12</span>
                   </div>
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div><span class="text-gray-400">Completed</span></div>
-                    <span class="text-green-500 font-bold">128 (32%)</span>
+                  <div class="flex justify-between items-center gap-1">
+                    <div class="flex items-center gap-1 min-w-0"><div class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"></div><span class="text-gray-400 truncate">Completed</span></div>
+                    <span class="text-green-500 font-bold shrink-0">128</span>
                   </div>
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-red-500"></div><span class="text-gray-400">Failed</span></div>
-                    <span class="text-red-500 font-bold">4 (8%)</span>
+                  <div class="flex justify-between items-center gap-1">
+                    <div class="flex items-center gap-1 min-w-0"><div class="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></div><span class="text-gray-400 truncate">Failed</span></div>
+                    <span class="text-red-500 font-bold shrink-0">4</span>
                   </div>
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-yellow-600"></div><span class="text-gray-400">Cancelled</span></div>
-                    <span class="text-yellow-600 font-bold">2 (4%)</span>
+                  <div class="flex justify-between items-center gap-1">
+                    <div class="flex items-center gap-1 min-w-0"><div class="w-1.5 h-1.5 rounded-full bg-yellow-600 shrink-0"></div><span class="text-gray-400 truncate">Cancelled</span></div>
+                    <span class="text-yellow-600 font-bold shrink-0">2</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Battery Health Trend Chart -->
-            <div class="bg-[#121929] rounded-2xl border border-gray-850 p-3 relative flex flex-col justify-between">
-              <div class="flex justify-between items-start">
-                 <h3 class="text-xs font-semibold text-gray-200">Battery Overview</h3>
-                 <span id="battery-trend-avg" class="text-[10px] text-green-400 font-bold">78% Average</span>
+            <div class="bg-[#121929] rounded-2xl border border-gray-850 p-3 mobile-card-padding relative flex flex-col justify-between">
+              <div class="flex justify-between items-start gap-1">
+                 <h3 class="text-xs font-semibold text-gray-200 mobile-title-shrink">Battery Overview</h3>
+                 <span id="battery-trend-avg" class="text-[8px] xs:text-[10px] text-green-400 font-bold shrink-0">78% Avg</span>
               </div>
               <div class="h-16 w-full relative mt-2">
                 <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full">
@@ -826,9 +850,9 @@
                 <span>18:00</span>
                 <span>24:00</span>
               </div>
-              <div class="flex justify-center gap-2 mt-1.5 text-[8px] border-t border-gray-800/40 pt-1">
-                <div class="flex items-center gap-1"><div class="w-2 h-0.5 bg-blue-500"></div><span class="text-gray-500">Average Battery</span></div>
-                <div class="flex items-center gap-1"><div class="w-2 h-0.5 border-t border-dashed border-green-500"></div><span class="text-gray-500">Minimum Battery</span></div>
+              <div class="flex justify-center gap-2 mt-1.5 text-[7.5px] mobile-text-shrink border-t border-gray-800/40 pt-1">
+                <div class="flex items-center gap-1"><div class="w-2 h-0.5 bg-blue-500"></div><span class="text-gray-500">Average</span></div>
+                <div class="flex items-center gap-1"><div class="w-2 h-0.5 border-t border-dashed border-green-500"></div><span class="text-gray-500">Minimum</span></div>
               </div>
             </div>
           </div>
@@ -837,49 +861,49 @@
           <div class="mb-4 shrink-0">
             <div class="flex items-center justify-between mb-2 px-1">
               <h2 class="text-sm font-semibold text-gray-200">Recent Alerts</h2>
-              <button onclick="showToast('Loading full system alert history...', 'info')" class="text-xs text-blue-500 hover:text-blue-400">View All</button>
+              <button onclick="showToast('Loading full alert history...', 'info')" class="text-xs text-blue-500 hover:text-blue-400">View All</button>
             </div>
             
-            <div class="bg-[#121929] rounded-2xl border border-gray-850 p-4 space-y-3.5">
-              <div class="flex items-center gap-3 pb-3 border-b border-gray-800/50">
+            <div class="bg-[#121929] rounded-2xl border border-gray-850 p-4 mobile-card-padding space-y-3.5">
+              <div class="flex items-center gap-3 mobile-gap-reduction pb-3 border-b border-gray-800/50">
                 <div class="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 shrink-0">
                   <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500"></i>
                 </div>
-                <div class="flex-1">
+                <div class="flex-1 min-w-0">
                   <h4 class="text-xs font-bold text-white leading-tight">Low Battery</h4>
-                  <p class="text-[10px] text-gray-500">R1-05 battery below 20%</p>
+                  <p class="text-[10px] text-gray-500 truncate">R1-05 battery below 20%</p>
                 </div>
               </div>
 
-              <div class="flex items-center gap-3 pb-3 border-b border-gray-800/50">
+              <div class="flex items-center gap-3 mobile-gap-reduction pb-3 border-b border-gray-800/50">
                 <div class="w-8 h-8 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 shrink-0">
                   <i data-lucide="ban" class="w-4 h-4 text-yellow-500"></i>
                 </div>
-                <div class="flex-1">
+                <div class="flex-1 min-w-0">
                   <h4 class="text-xs font-bold text-white leading-tight">Blocked Path</h4>
-                  <p class="text-[10px] text-gray-500">R2-01 path is blocked</p>
+                  <p class="text-[10px] text-gray-500 truncate">R2-01 path is blocked</p>
                 </div>
               </div>
 
-              <div class="flex items-center gap-3 pb-3 border-b border-gray-800/50">
+              <div class="flex items-center gap-3 mobile-gap-reduction pb-3 border-b border-gray-800/50">
                 <div class="w-8 h-8 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 shrink-0">
                   <i data-lucide="droplet" class="w-4 h-4 text-yellow-500"></i>
                 </div>
-                <div class="flex-1">
+                <div class="flex-1 min-w-0">
                   <h4 class="text-xs font-bold text-white leading-tight">Spill Detected</h4>
-                  <p class="text-[10px] text-gray-500">R2-02 tray spill detected</p>
+                  <p class="text-[10px] text-gray-500 truncate">R2-02 tray spill detected</p>
                 </div>
               </div>
 
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 mobile-gap-reduction">
                 <div class="w-8 h-8 rounded-xl bg-gray-500/10 flex items-center justify-center border border-gray-500/20 shrink-0">
                   <i data-lucide="wrench" class="w-4 h-4 text-gray-400"></i>
                 </div>
-                <div class="flex-1">
+                <div class="flex-1 min-w-0">
                   <h4 class="text-xs font-bold text-white leading-tight">Maintenance Due</h4>
-                  <p class="text-[10px] text-gray-500">R1-03 scheduled maintenance</p>
+                  <p class="text-[10px] text-gray-500 truncate">R1-03 scheduled maintenance</p>
                 </div>
-                <span class="text-[10px] text-gray-500 font-medium">1 hr ago</span>
+                <span class="text-[10px] text-gray-500 font-medium shrink-0 whitespace-nowrap">1 hr ago</span>
               </div>
             </div>
           </div>
@@ -976,7 +1000,7 @@
       if (highlightCameraStatus) {
         highlightCameraStatus.innerHTML = `
           <div class="w-1.5 h-1.5 rounded-full ${highlightedRobot.status === 'offline' ? 'bg-red-500' : 'bg-green-500 animate-pulse'}"></div>
-          <span class="font-bold text-[7.5px] uppercase tracking-wider">${highlightedRobot.status === 'offline' ? 'Offline' : 'Live Camera'}</span>
+          <span class="font-bold text-[7px] uppercase tracking-wider">${highlightedRobot.status === 'offline' ? 'Offline' : 'Live Camera'}</span>
         `;
       }
     }
@@ -1060,7 +1084,7 @@
         return `
           <div 
             onclick="changeHighlight(${masterIndex}); navigate('robot_details');"
-            class="bg-[#121929] rounded-2xl border border-gray-800/60 p-3 flex items-stretch gap-4 cursor-pointer hover:bg-[#1a233a] transition-colors shrink-0"
+            class="bg-[#121929] rounded-2xl border border-gray-800/60 p-3 flex items-stretch gap-4 cursor-pointer hover:bg-[#1a233a] transition-colors shrink-0 animate-slide-in"
           >
             <div class="w-[60px] shrink-0 h-[78px]">${getPremiumRobotSVG(robot.status)}</div>
             
@@ -1078,7 +1102,7 @@
               
               <p class="text-[10px] text-gray-400 mb-2">NEXBOT Pro Delivery Unit</p>
               
-              <div class="grid grid-cols-[55px_1fr] gap-y-1 text-[10px]">
+              <div class="grid grid-cols-[55px_1fr] gap-y-1 text-[10px] mobile-text-shrink">
                 <span class="text-gray-500 font-medium">Battery</span>
                 <div class="flex items-center gap-2">
                   <span class="text-gray-200 font-medium w-6">${Math.round(robot.battery)}%</span>
@@ -1127,39 +1151,39 @@
           <div class="flex-1 overflow-y-auto px-4 hide-scrollbar flex flex-col gap-4 pb-[90px] pt-2">
             
             <!-- Unit Status Header Summary Card -->
-            <div class="flex items-start gap-4 bg-[#121929] rounded-2xl p-4 border border-gray-800/60 shrink-0">
-              <div id="details-avatar" class="w-[72px] h-[92px] shrink-0"></div>
+            <div class="flex items-start gap-4 bg-[#121929] rounded-2xl p-4 border border-gray-800/60 mobile-card-padding shrink-0">
+              <div id="details-avatar" class="w-[72px] h-[92px] mobile-avatar-shrink shrink-0"></div>
               
               <div class="flex-1 flex justify-between h-[92px]">
-                <div class="flex flex-col justify-between h-full">
+                <div class="flex flex-col justify-between h-full min-w-0">
                   <div>
-                    <div class="flex items-center gap-2 mb-1">
+                    <div class="flex items-center gap-1.5 mb-1">
                       <h2 id="details-id" class="text-lg font-bold text-white leading-none">${highlightedRobot.id}</h2>
-                      <div id="details-status-pill" class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] border bg-green-500/10 text-green-400 border-green-500/20">
+                      <div id="details-status-pill" class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] border bg-green-500/10 text-green-400 border-green-500/20 shrink-0">
                         <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                         <span class="capitalize text-[8px] font-bold">Online</span>
                       </div>
                     </div>
-                    <p id="details-location" class="text-[11px] text-gray-400 font-medium">Hotel Lobby • Floor 1</p>
+                    <p id="details-location" class="text-[11px] text-gray-400 font-medium truncate">Hotel Lobby • Floor 1</p>
                   </div>
                   
-                  <div class="flex gap-1.5">
-                    <div class="bg-[#1a233a] rounded-lg px-2 py-1 flex flex-col min-w-[54px] items-center">
-                      <span class="text-[8px] text-gray-500 font-medium">Model</span>
-                      <span class="text-[9px] font-bold text-gray-200">Hotel Pro</span>
+                  <div class="flex gap-1.5 mobile-gap-reduction">
+                    <div class="bg-[#1a233a] rounded-lg p-1 flex flex-col flex-1 items-center min-w-0">
+                      <span class="text-[7.5px] text-gray-500 font-medium uppercase tracking-tight">Model</span>
+                      <span class="text-[9px] font-bold text-gray-200 truncate w-full text-center">Hotel Pro</span>
                     </div>
-                    <div class="bg-[#1a233a] rounded-lg px-2 py-1 flex flex-col min-w-[54px] items-center">
-                      <span class="text-[8px] text-gray-500 font-medium">Firmware</span>
-                      <span class="text-[9px] font-bold text-gray-200">v2.4.6</span>
+                    <div class="bg-[#1a233a] rounded-lg p-1 flex flex-col flex-1 items-center min-w-0">
+                      <span class="text-[7.5px] text-gray-500 font-medium uppercase tracking-tight">Firmware</span>
+                      <span class="text-[9px] font-bold text-gray-200 truncate w-full text-center">v2.4.6</span>
                     </div>
-                    <div class="bg-[#1a233a] rounded-lg px-2.5 py-1 flex flex-col min-w-[62px] items-center">
-                      <span class="text-[8px] text-gray-500 font-medium">Uptime</span>
-                      <span id="details-uptime" class="text-[9px] font-bold text-gray-200">2d 14h 32m</span>
+                    <div class="bg-[#1a233a] rounded-lg p-1 flex flex-col flex-[1.3] items-center min-w-0">
+                      <span class="text-[7.5px] text-gray-500 font-medium uppercase tracking-tight">Uptime</span>
+                      <span id="details-uptime" class="text-[9px] font-bold text-gray-200 truncate w-full text-center">2d 14h 32m</span>
                     </div>
                   </div>
                 </div>
 
-                <div class="flex flex-col items-end justify-between py-0.5">
+                <div class="flex flex-col items-end justify-between py-0.5 shrink-0 pl-1">
                   <div class="flex flex-col items-end">
                     <span class="text-[9px] text-gray-500 font-semibold uppercase tracking-wider">Battery</span>
                     <div class="flex items-center gap-1 mt-0.5">
@@ -1174,8 +1198,8 @@
                     </div>
                   </div>
                   <div class="flex flex-col items-end">
-                    <span class="text-[8px] text-gray-500">Charging Status</span>
-                    <span id="details-charging-text" class="text-[9px] font-bold text-green-500">Not Charging</span>
+                    <span class="text-[8px] text-gray-500 uppercase tracking-tight">Charging Status</span>
+                    <span id="details-charging-text" class="text-[9px] font-bold text-green-500 whitespace-nowrap">Not Charging</span>
                   </div>
                 </div>
               </div>
@@ -1205,9 +1229,9 @@
               ${state.activeTelemetryTab === 'Overview' ? `
                 
                 <!-- Location Module -->
-                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 shrink-0">
+                <div class="bg-[#121929] rounded-2xl p-4 mobile-card-padding shrink-0">
                   <h3 class="text-xs font-semibold text-gray-200 mb-3">Location</h3>
-                  <div class="flex gap-4 items-stretch">
+                  <div class="flex gap-4 mobile-gap-reduction items-stretch">
                     <div class="flex-[3] bg-[#0a101d] rounded-xl border border-gray-800/80 relative overflow-hidden min-h-[140px]">
                       <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="absolute inset-0 opacity-40">
                         <g stroke="#1e293b" stroke-width="1.5" fill="none">
@@ -1237,36 +1261,36 @@
                       </div>
                     </div>
                     
-                    <div class="flex-[2] flex flex-col justify-between py-1">
-                      <div class="flex items-center gap-2.5">
+                    <div class="flex-[2] flex flex-col justify-between py-1 min-w-0">
+                      <div class="flex items-center gap-2.5 min-w-0">
                         <div class="w-8 h-8 rounded-[10px] bg-[#1a233a] flex items-center justify-center shrink-0 border border-gray-750">
                           <i data-lucide="map-pin" class="w-4 h-4 text-blue-500"></i>
                         </div>
-                        <div class="flex flex-col justify-center">
-                          <span class="text-[8px] text-gray-500 leading-tight mb-0.5 uppercase tracking-wider font-semibold">Current Position</span>
+                        <div class="flex flex-col justify-center min-w-0">
+                          <span class="text-[8px] text-gray-500 leading-tight mb-0.5 uppercase tracking-wider font-semibold whitespace-nowrap">Current Position</span>
                           <span class="text-[12px] font-bold text-gray-200 leading-tight truncate">Hotel Lobby (1F)</span>
                         </div>
                       </div>
                       
-                      <div class="flex items-center gap-2.5 mt-3">
+                      <div class="flex items-center gap-2.5 mt-3 min-w-0">
                         <div class="w-8 h-8 rounded-[10px] bg-[#1a233a] flex items-center justify-center shrink-0 border border-gray-750">
                           <i data-lucide="compass" class="w-4 h-4 text-gray-400"></i>
                         </div>
-                        <div class="flex flex-col justify-center">
-                          <span class="text-[8px] text-gray-500 leading-tight mb-0.5 uppercase tracking-wider font-semibold">Heading</span>
-                          <span id="details-heading" class="text-[12px] font-bold text-gray-200 leading-tight">120° SE</span>
+                        <div class="flex flex-col justify-center min-w-0">
+                          <span class="text-[8px] text-gray-500 leading-tight mb-0.5 uppercase tracking-wider font-semibold whitespace-nowrap">Heading</span>
+                          <span id="details-heading" class="text-[12px] font-bold text-gray-200 leading-tight truncate">120° SE</span>
                         </div>
                       </div>
                       
-                      <div class="mt-3">
+                      <div class="mt-3 min-w-0">
                         <div class="text-[8px] text-gray-500 mb-0.5 uppercase tracking-wider font-semibold">Coordinates</div>
-                        <div id="details-coords" class="text-[11px] text-gray-300 font-mono flex gap-3">
-                          <span>X: 12.45 m</span>
-                          <span>Y: 8.32 m</span>
+                        <div id="details-coords" class="text-[11px] text-gray-300 font-mono flex gap-3 mobile-text-shrink">
+                          <span class="whitespace-nowrap">X: 12.45 m</span>
+                          <span class="whitespace-nowrap">Y: 8.32 m</span>
                         </div>
                       </div>
                       
-                      <button onclick="showToast('Initializing active map coordinates stream...', 'info')" class="w-full mt-3 py-1.5 bg-transparent border border-blue-500/40 text-blue-500 text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 hover:bg-blue-600/10 transition-colors">
+                      <button onclick="showToast('Initializing active map coordinates stream...', 'info')" class="w-full mt-3 py-1.5 bg-transparent border border-blue-500/40 text-blue-500 text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 hover:bg-blue-600/10 transition-colors whitespace-nowrap">
                         <i data-lucide="map" class="w-3.5 h-3.5"></i> View Live Map
                       </button>
                     </div>
@@ -1274,12 +1298,12 @@
                 </div>
 
                 <!-- Battery & Power and Payload Double columns layout -->
-                <div class="grid grid-cols-2 gap-4 shrink-0 mt-4">
-                  <!-- Left side: Battery & Power -->
-                  <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 flex flex-col justify-between">
-                    <h3 class="text-xs font-semibold text-gray-200 mb-3">Battery & Power</h3>
-                    <div class="flex items-center gap-3 mb-4">
-                      <div class="relative w-[70px] h-[70px] shrink-0">
+                <div class="grid grid-cols-2 gap-3 mobile-gap-reduction shrink-0 mt-4">
+                  <!-- Left side: Battery & Power (Adaptive layouts implemented) -->
+                  <div class="bg-[#121929] rounded-2xl p-3 border border-gray-850 flex flex-col justify-between mobile-card-padding">
+                    <h3 class="text-xs font-semibold text-gray-200 mb-3 mobile-title-shrink">Battery & Power</h3>
+                    <div class="flex flex-col xs:flex-row items-center gap-3 mobile-gap-reduction mb-4">
+                      <div class="relative w-[52px] h-[52px] xs:w-[60px] xs:h-[60px] mobile-circle-shrink shrink-0">
                         <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
                           <defs>
                             <linearGradient id="batteryGradientDetail" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1290,106 +1314,112 @@
                           <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="10" />
                           <circle id="details-battery-circle" cx="50" cy="50" r="40" fill="none" stroke="url(#batteryGradientDetail)" stroke-width="10" stroke-dasharray="251 251" stroke-dashoffset="35" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
                         </svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center pt-1">
-                          <span id="details-battery-percent-inner" class="text-lg font-light text-white leading-none">86%</span>
-                          <span class="text-[7px] text-gray-500 mt-1 uppercase font-semibold">Battery</span>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pt-0.5">
+                          <span id="details-battery-percent-inner" class="text-sm font-semibold text-white leading-none">86%</span>
+                          <span class="text-[6.5px] text-gray-500 mt-1 uppercase font-bold leading-none">Power</span>
                         </div>
                       </div>
-                      <div class="space-y-1.5 text-[11px] flex-1">
+                      <div class="space-y-1 text-[10px] mobile-text-shrink flex-1 w-full">
                         <div class="flex justify-between border-b border-gray-800/30 pb-0.5">
-                          <span class="text-gray-500 font-medium">Voltage</span>
-                          <span id="details-voltage" class="text-gray-200 font-bold">24.6 V</span>
+                          <span class="text-gray-500 font-semibold">Voltage</span>
+                          <span id="details-voltage" class="text-gray-200 font-bold whitespace-nowrap">24.6 V</span>
                         </div>
                         <div class="flex justify-between border-b border-gray-800/30 pb-0.5">
-                          <span class="text-gray-500 font-medium">Temperature</span>
-                          <span id="details-temp" class="text-gray-200 font-bold">31°C</span>
+                          <span class="text-gray-500 font-semibold">Temp</span>
+                          <span id="details-temp" class="text-gray-200 font-bold whitespace-nowrap">31°C</span>
                         </div>
                         <div class="flex justify-between">
-                          <span class="text-gray-500 font-medium">Health</span>
-                          <span class="text-green-500 font-bold">Good</span>
+                          <span class="text-gray-500 font-semibold">Health</span>
+                          <span class="text-green-500 font-bold whitespace-nowrap">Good</span>
                         </div>
                       </div>
                     </div>
-                    <button onclick="showToast('Accessing detailed historical battery health telemetry...', 'info')" class="w-full py-1.5 bg-transparent border border-blue-500/40 text-blue-500 text-[11px] font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-blue-600/10 transition-colors">
+                    <button onclick="showToast('Accessing detailed telemetry...', 'info')" class="w-full py-1.5 bg-transparent border border-blue-500/40 text-blue-500 text-[10px] font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-blue-600/10 transition-colors whitespace-nowrap">
                       <i data-lucide="zap" class="w-3.5 h-3.5"></i> Battery Details
                     </button>
                   </div>
 
                   <!-- Right side: Payload status -->
-                  <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 flex flex-col justify-between">
-                    <h3 class="text-xs font-semibold text-gray-200 mb-3">Payload Status</h3>
-                    <div class="flex items-center gap-3 mb-4">
-                      <div class="relative w-[70px] h-[70px] rounded-full border-4 border-[#1e293b] flex items-center justify-center shrink-0">
-                         <i data-lucide="package" class="w-8 h-8 text-blue-500" stroke-width="1.5"></i>
+                  <div class="bg-[#121929] rounded-2xl p-3 border border-gray-850 flex flex-col justify-between mobile-card-padding">
+                    <h3 class="text-xs font-semibold text-gray-200 mb-3 mobile-title-shrink">Payload Status</h3>
+                    <div class="flex flex-col xs:flex-row items-center gap-3 mobile-gap-reduction mb-4">
+                      <div class="relative w-[52px] h-[52px] xs:w-[60px] xs:h-[60px] mobile-circle-shrink rounded-full border-4 border-[#1e293b] flex items-center justify-center shrink-0">
+                         <i data-lucide="package" class="w-6 h-6 text-blue-500" stroke-width="1.5"></i>
                       </div>
-                      <div class="space-y-1.5 text-[11px] flex-1">
+                      <div class="space-y-1 text-[10px] mobile-text-shrink flex-1 w-full">
                         <div class="flex justify-between border-b border-gray-800/30 pb-0.5">
-                          <span class="text-gray-500 font-medium">Current Load</span>
-                          <span id="details-payload" class="text-gray-200 font-bold">5.2 kg</span>
+                          <span class="text-gray-500 font-semibold">Load</span>
+                          <span id="details-payload" class="text-gray-200 font-bold whitespace-nowrap">5.2 kg</span>
                         </div>
                         <div class="flex justify-between border-b border-gray-800/30 pb-0.5">
-                          <span class="text-gray-500 font-medium">Capacity</span>
-                          <span class="text-gray-200 font-bold">20 kg</span>
+                          <span class="text-gray-500 font-semibold">Capacity</span>
+                          <span class="text-gray-200 font-bold whitespace-nowrap">20 kg</span>
                         </div>
                         <div class="flex justify-between">
-                          <span class="text-gray-500 font-medium">Status</span>
-                          <span class="flex items-center gap-1 text-green-500 font-bold">
-                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Stable
+                          <span class="text-gray-500 font-semibold">Status</span>
+                          <span class="flex items-center gap-1 text-green-500 font-bold whitespace-nowrap">
+                            <span class="w-1 h-1 rounded-full bg-green-500 animate-pulse"></span> Stable
                           </span>
                         </div>
                       </div>
                     </div>
-                    <button onclick="showToast('Calibrating physical payload sensor platforms...', 'info')" class="w-full py-1.5 bg-transparent border border-blue-500/40 text-blue-500 text-[11px] font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-blue-600/10 transition-colors">
+                    <button onclick="showToast('Calibrating payload sensors...', 'info')" class="w-full py-1.5 bg-transparent border border-blue-500/40 text-blue-500 text-[10px] font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-blue-600/10 transition-colors whitespace-nowrap">
                       <i data-lucide="scale" class="w-3.5 h-3.5"></i> Payload Details
                     </button>
                   </div>
                 </div>
 
                 <!-- Operational Status grid -->
-                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 shrink-0 mt-4">
+                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 shrink-0 mt-4 mobile-card-padding">
                   <h3 class="text-xs font-semibold text-gray-200 mb-3">Operational Status</h3>
-                  <div class="grid grid-cols-2 gap-x-4 gap-y-3">
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-gray-800/80">
-                       <div class="flex items-center gap-2 text-[10px] text-gray-300 font-medium">
-                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500"></i> Navigation
+                  <div class="grid grid-cols-2 gap-x-3 gap-y-2.5 mobile-gap-reduction">
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                       <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
+                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500 shrink-0"></i> 
+                         <span class="truncate">Navigation</span>
                        </div>
-                       <span class="text-[10px] text-green-500 font-bold">Normal</span>
+                       <span class="text-[10px] text-green-500 font-bold shrink-0">Normal</span>
                      </div>
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-gray-800/80">
-                       <div class="flex items-center gap-2 text-[10px] text-gray-300 font-medium">
-                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500"></i> Payload System
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                       <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
+                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500 shrink-0"></i> 
+                         <span class="truncate">Payload</span>
                        </div>
-                       <span class="text-[10px] text-green-500 font-bold">Normal</span>
+                       <span class="text-[10px] text-green-500 font-bold shrink-0">Normal</span>
                      </div>
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-gray-800/80">
-                       <div class="flex items-center gap-2 text-[10px] text-gray-300 font-medium">
-                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500"></i> Motors
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                       <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
+                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500 shrink-0"></i> 
+                         <span class="truncate">Motors</span>
                        </div>
-                       <span class="text-[10px] text-green-500 font-bold">Normal</span>
+                       <span class="text-[10px] text-green-500 font-bold shrink-0">Normal</span>
                      </div>
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-gray-800/80">
-                       <div class="flex items-center gap-2 text-[10px] text-gray-300 font-medium">
-                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500"></i> Sensors
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                       <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
+                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500 shrink-0"></i> 
+                         <span class="truncate">Sensors</span>
                        </div>
-                       <span class="text-[10px] text-green-500 font-bold">All Good</span>
+                       <span class="text-[10px] text-green-500 font-bold shrink-0">All Good</span>
                      </div>
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-gray-800/80">
-                       <div class="flex items-center gap-2 text-[10px] text-gray-300 font-medium">
-                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500"></i> Obstacle Avoidance
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                       <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
+                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500 shrink-0"></i> 
+                         <span class="truncate">Obstacle</span>
                        </div>
-                       <span class="text-[10px] text-green-500 font-bold">Active</span>
+                       <span class="text-[10px] text-green-500 font-bold shrink-0">Active</span>
                      </div>
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-gray-800/80">
-                       <div class="flex items-center gap-2 text-[10px] text-gray-500 font-medium">
-                         <i data-lucide="minus-circle" class="w-3.5 h-3.5 text-gray-600"></i> Emergency Stop
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                       <div class="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium min-w-0">
+                         <i data-lucide="minus-circle" class="w-3.5 h-3.5 text-gray-600 shrink-0"></i> 
+                         <span class="truncate">E-Stop</span>
                        </div>
-                       <span class="text-[10px] text-gray-500 font-semibold">Inactive</span>
+                       <span class="text-[10px] text-gray-500 font-semibold shrink-0">Inactive</span>
                      </div>
                   </div>
                 </div>
 
                 <!-- Recent Alerts matching exactly -->
-                <div class="bg-[#121929] rounded-2xl border border-gray-850 p-4 shrink-0 mt-4">
+                <div class="bg-[#121929] rounded-2xl border border-gray-850 p-4 mobile-card-padding shrink-0 mt-4">
                    <div class="flex items-center justify-between mb-3">
                       <h3 class="text-xs font-semibold text-gray-200">Recent Alerts</h3>
                       <button onclick="showToast('Loading full alerts list...', 'info')" class="text-[10px] text-blue-500 hover:text-blue-400 font-bold">View All</button>
@@ -1397,33 +1427,33 @@
                    <div class="space-y-3">
                      <div class="flex items-center gap-3 pb-3 border-b border-gray-800/50">
                        <i data-lucide="alert-triangle" class="w-4 h-4 text-orange-500 shrink-0"></i>
-                       <div class="flex-1">
-                         <div class="text-[11px] text-gray-200 font-bold mb-0.5">Tray balance adjusted</div>
+                       <div class="flex-1 min-w-0">
+                         <div class="text-[11px] text-gray-200 font-bold mb-0.5 truncate">Tray balance adjusted</div>
                          <div class="text-[9px] text-gray-500">May 28, 2025 02:24 PM</div>
                        </div>
-                       <div class="flex items-center gap-2">
+                       <div class="flex items-center gap-1 shrink-0">
                          <span class="text-[9px] text-orange-500 border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 rounded font-bold">Warning</span>
                          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-500"></i>
                        </div>
                      </div>
                      <div class="flex items-center gap-3 pb-3 border-b border-gray-800/50">
                        <i data-lucide="info" class="w-4 h-4 text-blue-500 shrink-0"></i>
-                       <div class="flex-1">
-                         <div class="text-[11px] text-gray-200 font-bold mb-0.5">Robot firmware updated to v2.4.6</div>
+                       <div class="flex-1 min-w-0">
+                         <div class="text-[11px] text-gray-200 font-bold mb-0.5 truncate">Robot firmware updated to v2.4.6</div>
                          <div class="text-[9px] text-gray-500">May 27, 2025 11:15 PM</div>
                        </div>
-                       <div class="flex items-center gap-2">
+                       <div class="flex items-center gap-1 shrink-0">
                          <span class="text-[9px] text-blue-400 border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 rounded font-bold">Info</span>
                          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-500"></i>
                        </div>
                      </div>
                      <div class="flex items-center gap-3">
                        <i data-lucide="check-circle-2" class="w-4 h-4 text-green-500 shrink-0"></i>
-                       <div class="flex-1">
-                         <div class="text-[11px] text-gray-200 font-bold mb-0.5">Maintenance check completed</div>
+                       <div class="flex-1 min-w-0">
+                         <div class="text-[11px] text-gray-200 font-bold mb-0.5 truncate">Maintenance check completed</div>
                          <div class="text-[9px] text-gray-500">May 27, 2025 09:30 AM</div>
                        </div>
-                       <div class="flex items-center gap-2">
+                       <div class="flex items-center gap-1 shrink-0">
                          <span class="text-[9px] text-green-500 border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 rounded font-bold">Success</span>
                          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-500"></i>
                        </div>
@@ -1531,7 +1561,7 @@
           : 'bg-red-500/10 text-red-400 border-red-500/20'
         }`;
         detailsStatusPill.innerHTML = `
-          <div class="w-1 h-1 rounded-full ${highlightedRobot.status === 'online' ? 'bg-green-500' : highlightedRobot.status === 'busy' ? 'bg-blue-500' : highlightedRobot.status === 'charging' ? 'bg-yellow-500' : 'bg-red-500'}"></div>
+          <div class="w-1.5 h-1.5 rounded-full ${highlightedRobot.status === 'online' ? 'bg-green-500' : highlightedRobot.status === 'busy' ? 'bg-blue-500' : highlightedRobot.status === 'charging' ? 'bg-yellow-500' : 'bg-red-500'}"></div>
           <span class="capitalize text-[8px] font-bold">${highlightedRobot.status}</span>
         `;
       }
@@ -1601,7 +1631,7 @@
         <div class="flex-1 px-4 flex flex-col gap-4 overflow-y-auto hide-scrollbar animate-slide-in pb-[90px]">
           <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-200 mt-2">Active Task Logs</h2>
           
-          <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 space-y-4">
+          <div class="bg-[#121929] rounded-2xl p-4 border border-gray-855 space-y-4">
             <div class="flex justify-between items-center border-b border-gray-800/50 pb-3">
               <div>
                 <h3 class="text-xs font-bold text-white">Route T-892</h3>
@@ -1637,7 +1667,7 @@
         <div class="flex-1 px-4 py-2 flex flex-col gap-5 overflow-y-auto hide-scrollbar animate-slide-in pb-[90px]">
           <div>
             <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2 px-1">Account settings</h3>
-            <div class="bg-[#121929] rounded-2xl border border-gray-850 overflow-hidden divide-y divide-gray-800/50">
+            <div class="bg-[#121929] rounded-2xl border border-gray-855 overflow-hidden divide-y divide-gray-800/50">
               <div onclick="showToast('Mock profile details configured.', 'info')" class="flex items-center justify-between p-3.5 hover:bg-[#1a233a] cursor-pointer">
                 <span class="text-xs font-medium text-gray-200">Owner Profile settings</span>
                 <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
@@ -1651,7 +1681,7 @@
 
           <div>
             <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2 px-1">Fleet Management settings</h3>
-            <div class="bg-[#121929] rounded-2xl border border-gray-850 overflow-hidden divide-y divide-gray-800/50">
+            <div class="bg-[#121929] rounded-2xl border border-gray-855 overflow-hidden divide-y divide-gray-800/50">
               <div onclick="showToast('Loaded geofence profiles (Read only)', 'info')" class="flex items-center justify-between p-3.5 hover:bg-[#1a233a] cursor-pointer">
                 <span class="text-xs font-medium text-gray-200">Geofences & Bounds</span>
                 <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
