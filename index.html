@@ -3127,7 +3127,7 @@
       }, 1000);
     }
 
-    // Renders Selected Robot Card Panel matching 1:1 image_52a3ca.jpg
+    // Renders Selected Robot Card Panel perfectly matching and robust responsive for small devices
     function renderLiveMapPanel() {
       const activeBot = state.robots[state.highlightIdx];
       const panel = document.getElementById('selected-robot-card-panel');
@@ -3139,53 +3139,60 @@
                        : 'bg-red-500/10 text-red-400 border-red-500/20';
 
       panel.innerHTML = `
-        <div class="flex items-center justify-between mb-2 shrink-0">
-          <span class="text-gray-400 font-extrabold text-[9px] uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Selected Robot</span>
+        <div class="flex items-center justify-between mb-3 shrink-0">
+          <span class="text-gray-400 font-extrabold text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-pulse"></span> 
+            Selected Robot
+          </span>
           <i data-lucide="chevron-up" class="w-4 h-4 text-gray-500"></i>
         </div>
 
-        <div class="flex items-center gap-3.5">
-          <!-- Robot premium render SVG -->
-          <div class="w-14 h-16 shrink-0">
-            ${getPremiumRobotSVG(activeBot.status)}
-          </div>
-
-          <div class="flex-1 space-y-1.5 text-xs">
-            <div class="flex items-center gap-2 mb-1">
-              <h2 class="text-sm font-black text-white leading-none">${activeBot.id}</h2>
-              <span class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] border ${statusCol}">
-                <span class="w-1 h-1 rounded-full ${activeBot.status === 'online' ? 'bg-green-500' : activeBot.status === 'busy' ? 'bg-blue-500' : activeBot.status === 'charging' ? 'bg-yellow-500' : 'bg-red-500'}"></span>
-                <span class="capitalize font-bold text-[8px]">${activeBot.status}</span>
-              </span>
+        <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4">
+          <!-- Left Content: Robot Avatar & Info (min-w prevents squishing on small phones) -->
+          <div class="flex items-center gap-3 flex-1 min-w-[200px]">
+            <!-- Robot premium render SVG -->
+            <div class="w-14 h-16 shrink-0 drop-shadow-md">
+              ${getPremiumRobotSVG(activeBot.status)}
             </div>
 
-            <div class="grid grid-cols-[55px_1fr] gap-x-1.5 gap-y-0.5 font-bold text-[10px] text-gray-400">
-              <span>Status</span>
-              <span class="text-gray-200">Online</span>
-              
-              <span>En Route</span>
-              <span class="text-gray-200 truncate w-32">to Room 1205 (12F)</span>
-
-              <span>Battery</span>
-              <div class="flex items-center gap-1.5">
-                <span class="text-gray-200 font-mono text-[9px] w-6">${Math.round(activeBot.battery)}%</span>
-                <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div class="h-full bg-green-500 rounded-full" style="width: ${activeBot.battery}%"></div>
-                </div>
+            <div class="flex-1 space-y-1.5 text-xs min-w-0">
+              <div class="flex items-center gap-2 mb-1.5">
+                <h2 class="text-[15px] font-black text-white leading-none">${activeBot.id}</h2>
+                <span class="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] border ${statusCol}">
+                  <span class="w-1 h-1 rounded-full ${activeBot.status === 'online' ? 'bg-green-500' : activeBot.status === 'busy' ? 'bg-blue-500' : activeBot.status === 'charging' ? 'bg-yellow-500' : 'bg-red-500'}"></span>
+                  <span class="capitalize font-bold text-[9px]">${activeBot.status}</span>
+                </span>
               </div>
 
-              <span>ETA</span>
-              <span class="text-[#10b981] font-black">2 min</span>
+              <!-- Metrics Info Grid -->
+              <div class="grid grid-cols-[55px_1fr] gap-x-1.5 gap-y-1 font-bold text-[10px] text-gray-400">
+                <span>Status</span>
+                <span class="text-gray-200 truncate">Online</span>
+                
+                <span>En Route</span>
+                <span class="text-gray-200 truncate" title="${activeBot.location}">to Room 1205 (12F)</span>
+
+                <span>Battery</span>
+                <div class="flex items-center gap-1.5 pr-1">
+                  <span class="text-gray-200 font-mono text-[9px] w-6 shrink-0">${Math.round(activeBot.battery)}%</span>
+                  <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div class="h-full bg-green-500 rounded-full transition-all duration-500" style="width: ${activeBot.battery}%"></div>
+                  </div>
+                </div>
+
+                <span>ETA</span>
+                <span class="text-[#10b981] font-black">2 min</span>
+              </div>
             </div>
           </div>
 
-          <!-- Go to Robot Trigger Button -->
-          <div class="flex flex-col gap-1.5 shrink-0">
-            <button onclick="recenterMapViewOnRobot('${activeBot.id}')" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black flex items-center gap-1 shadow-lg shadow-blue-500/10 active:scale-95 transition-all">
+          <!-- Action Buttons Wrapper (Adapts to full-width row on mobile, column on tablet/larger) -->
+          <div class="flex flex-row sm:flex-col w-full sm:w-[110px] gap-2 shrink-0 mt-1 sm:mt-0">
+            <button onclick="recenterMapViewOnRobot('${activeBot.id}')" class="flex-1 sm:flex-none px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[11px] font-black flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(37,99,235,0.25)] active:scale-95 transition-all">
               <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
               <span>Re-center</span>
             </button>
-            <button onclick="triggerDispatchMode()" class="px-3 py-2 bg-transparent border border-slate-800 hover:bg-white/5 text-gray-300 rounded-xl text-[10px] font-black flex items-center gap-1 active:scale-95 transition-all">
+            <button onclick="triggerDispatchMode()" class="flex-1 sm:flex-none px-3.5 py-2.5 bg-transparent border border-slate-700 hover:bg-[#1f2b42] text-gray-300 rounded-xl text-[11px] font-black flex items-center justify-center gap-1.5 active:scale-95 transition-all">
               <i data-lucide="map-pin" class="w-3.5 h-3.5 text-gray-400"></i>
               <span>Waypoint</span>
             </button>
