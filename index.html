@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Nexbot Fleet Management</title>
+  <title>Nexbot Management Console</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -575,7 +575,7 @@
       const rIdx = state.robots.findIndex(r => r.id === 'R2-03');
       if (rIdx !== -1) {
         const robot = state.robots[rIdx];
-        showToast('计算最新安全避障路径中...', 'info');
+        showToast('In calculating the latest safe obstacle avoidance path...', 'info');
         
         // Push destination point
         const routePath = document.getElementById('dynamic-dispatch-route');
@@ -585,7 +585,7 @@
         }
 
         setTimeout(() => {
-          showToast('Nexbot Pro 启动，正在前往指定目标位置...', 'success');
+          showToast('Nexbot has started and is en route to the specified destination....', 'success');
           
           let steps = 0;
           const startX = robot.x;
@@ -606,7 +606,7 @@
               robot.location = "First Floor • Zone X";
               robot.activity = "Standby";
               routePath.classList.add('hidden');
-              showToast('R2-03 已安全抵达派遣目标区！', 'success');
+              showToast('R2-03 has safely arrived at the target area!', 'success');
             }
           }, 200);
         }, 1500);
@@ -624,10 +624,10 @@
       if (btn) {
         if (state.isNavigationPaused) {
           btn.innerHTML = `<div class="w-11 h-11 bg-amber-500/10 border border-amber-500 rounded-2xl flex items-center justify-center text-amber-500 shrink-0"><i data-lucide="play" class="w-5.5 h-5.5"></i></div><span class="text-[9px] text-gray-400 font-medium">Resume</span>`;
-          showToast('Nexbot 运动控制系统已挂起，电机抱闸锁定', 'warning');
+          showToast('Nexbot motion control system is engaged, and the motor brake is locked.', 'warning');
         } else {
           btn.innerHTML = `<div class="w-11 h-11 bg-white/5 border border-slate-800 rounded-2xl flex items-center justify-center text-gray-300 shrink-0"><i data-lucide="pause" class="w-5.5 h-5.5"></i></div><span class="text-[9px] text-gray-400 font-medium">Pause</span>`;
-          showToast('恢复任务，控制总线信号正常', 'success');
+          showToast('Resume task, control bus signals are normal', 'success');
         }
         lucide.createIcons({ node: btn });
       }
@@ -643,7 +643,7 @@
         <div class="flex flex-col items-center mt-12">
           <span class="text-[10px] text-blue-400 font-extrabold tracking-widest uppercase mb-1">Nexbot Intercom VoIP</span>
           <h2 class="text-2xl font-bold text-white mb-2">${activeBot.id} (Intercom)</h2>
-          <span id="call-status" class="text-xs text-gray-400">正在建立高带宽数据连接通道...</span>
+          <span id="call-status" class="text-xs text-gray-400">High-bandwidth data connection channel is being established....</span>
         </div>
 
         <div class="flex flex-col items-center justify-center my-6 relative">
@@ -684,7 +684,7 @@
       const answerBtn = document.getElementById('answer-call-btn');
       if (answerBtn) answerBtn.remove();
       
-      showToast('双向多媒体语音管道已部署完毕。', 'success');
+      showToast('The two-way multimedia voice pipeline has been deployed.', 'success');
     }
 
     let audioWaveAnimFrame = null;
@@ -720,7 +720,7 @@
       const modal = document.getElementById('calling-simulation-modal');
       if (modal) modal.remove();
       if (!success) {
-        showToast('对讲呼叫已终止。', 'info');
+        showToast('The intercom call has been terminated.', 'info');
       }
     }
 
@@ -2066,10 +2066,10 @@
           <header class="px-5 pt-12 pb-4 flex items-center justify-between bg-[#070b14] shrink-0">
             <h1 class="text-2xl font-bold text-gray-100 tracking-wide">Tasks</h1>
             <div class="flex gap-4">
-              <button onclick="showToast('搜索功能已就绪', 'info')" class="text-gray-400 hover:text-white transition-colors">
+              <button onclick="showToast('The search function is now available.', 'info')" class="text-gray-400 hover:text-white transition-colors">
                 <i data-lucide="search" class="w-5.5 h-5.5"></i>
               </button>
-              <button onclick="showToast('筛选面板已加载', 'info')" class="text-gray-400 hover:text-white transition-colors">
+              <button onclick="showToast('The filter panel is loaded., 'info')" class="text-gray-400 hover:text-white transition-colors">
                 <i data-lucide="sliders-horizontal" class="w-5.5 h-5.5"></i>
               </button>
             </div>
@@ -3087,13 +3087,13 @@
       state.isDispatchMode = true;
       const banner = document.getElementById('dispatch-mode-banner');
       if (banner) banner.classList.remove('hidden');
-      showToast('目标调度模式开启。点击地图上任意位置来进行路径规划派遣。', 'info');
+      showToast('Target dispatch mode is enabled. Click anywhere on the map to plan and dispatch routes.', 'info');
     }
 
     // Move Selected Robot back to charging base station
     function triggerReturnToBase() {
       const activeBot = state.robots[state.highlightIdx];
-      showToast('计算返航路线...已锁定充电底座。', 'info');
+      showToast('Calculating return route... Charging dock locked.', 'info');
 
       // Base coordinates on map
       const baseX = 70;
@@ -3121,7 +3121,7 @@
             activeBot.location = "1F - Charging Station";
             renderLiveMapPanel();
             renderLiveMapOverlayRobots();
-            showToast('R2-03 已安全返航对接至充电座。', 'success');
+            showToast('R2-03 has safely returned and docked to the charging dock.', 'success');
           }
         }, 1500 / 20);
       }, 1000);
@@ -3207,7 +3207,7 @@
           state.mapPanX = -(robot.x - 50) * 0.01 * w * state.mapZoom;
           state.mapPanY = -(robot.y - 50) * 0.01 * h * state.mapZoom;
           applyMapTransform();
-          showToast(`已将视角锁定至机器人 ${robot.id}`, 'success');
+          showToast(`The focus has been locked on the robot. ${robot.id}`, 'success');
         }
       }
     }
