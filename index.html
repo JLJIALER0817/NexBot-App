@@ -1,484 +1,1386 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexbot Fleet Management</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexbot Fleet Management</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar hide rules */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
     
-    <style>
-        /* Custom scrollbar hiding */
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        /* Safe area for mobile bottom nav */
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
-        
-        /* Simple animations */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .5; }
-        }
-        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        
-        @keyframes bounce {
-            0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
-            50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); }
-        }
-        .animate-bounce { animation: bounce 1s infinite; }
-    </style>
+    /* Smooth transition presets */
+    .transition-all-300 {
+      transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Animation helper for views changing */
+    .animate-slide-in {
+      animation: slideIn 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Safe-area support for mobile devices */
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+  </style>
 </head>
-<body class="bg-[#0A0F1A] text-slate-200 antialiased">
-    <div id="root"></div>
+<body class="h-[100dvh] w-full bg-[#070b14] sm:bg-[#000000] text-white font-sans flex justify-center overflow-hidden selection:bg-blue-500/30">
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+  <!-- Main Mobile Container Frame -->
+  <div class="w-full max-w-[480px] h-full bg-[#070b14] relative flex flex-col shadow-2xl overflow-hidden border-x border-gray-900/40">
+    
+    <!-- App Header -->
+    <header id="app-header" class="px-5 pt-12 pb-4 flex items-center justify-between sticky top-0 z-40 bg-[#070b14]/90 backdrop-blur-md shrink-0 border-b border-gray-900/20">
+      <!-- Generated Dynamically -->
+    </header>
+
+    <!-- Main Content Area where views switch dynamically -->
+    <main id="main-content" class="flex-1 flex flex-col overflow-hidden relative bg-[#070b14]">
+      <!-- Views are rendered inside this section dynamically -->
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="sticky bottom-0 w-full bg-[#070b14]/95 backdrop-blur-lg border-t border-gray-800/80 px-2 pb-safe pt-2 flex justify-between items-end z-40">
+      <button onclick="navigate('dashboard')" id="nav-dashboard" class="flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-xl mb-1 mx-1 transition-all-300">
+        <i data-lucide="home" class="w-5 h-5"></i>
+        <span class="text-[10px] font-medium">Dashboard</span>
+      </button>
+      
+      <button onclick="navigate('robots')" id="nav-robots" class="flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-xl mb-1 mx-1 transition-all-300">
+        <i data-lucide="bot" class="w-5 h-5"></i>
+        <span class="text-[10px] font-medium">Robots</span>
+      </button>
+      
+      <div class="flex-1 flex justify-center -mt-6">
+        <button onclick="openDispatchModal()" class="w-14 h-14 bg-blue-600 rounded-full flex flex-col items-center justify-center text-white shadow-[0_4px_20px_rgba(37,99,235,0.4)] border-4 border-[#070b14] hover:bg-blue-500 hover:scale-105 transition-all duration-200 active:scale-95">
+          <i data-lucide="plus" class="w-7 h-7"></i>
+        </button>
+      </div>
+      
+      <button onclick="navigate('tasks')" id="nav-tasks" class="flex-1 flex flex-col items-center justify-center gap-1 py-2 transition-colors mb-1 mx-1 relative text-gray-500 hover:text-gray-300">
+        <div class="absolute top-1.5 right-[30%] w-1.5 h-1.5 bg-blue-500 rounded-full border border-[#070b14]"></div>
+        <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+        <span class="text-[10px] font-medium">Tasks</span>
+      </button>
+      
+      <button onclick="navigate('settings')" id="nav-settings" class="flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-xl mb-1 mx-1 transition-all-300">
+        <div class="absolute top-1.5 right-[30%] w-1.5 h-1.5 bg-red-500 rounded-full border border-[#070b14]"></div>
+        <i data-lucide="more-horizontal" class="w-5 h-5"></i>
+        <span class="text-[10px] font-medium">More</span>
+      </button>
+    </nav>
+
+    <!-- Dispatch Task Overlay Modal -->
+    <div id="dispatch-modal" class="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+      <div class="w-full bg-[#0d1321] rounded-t-3xl border-t border-gray-800 p-6 space-y-5 animate-slide-in max-h-[85vh] overflow-y-auto hide-scrollbar">
+        <div class="flex justify-between items-center">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="zap" class="w-5 h-5 text-blue-500"></i> Dispatch Nexbot Task
+          </h2>
+          <button onclick="closeDispatchModal()" class="p-1 hover:bg-gray-800 rounded-full text-gray-400 hover:text-white transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
         
-        // A helper component to render Lucide icons in our simple setup
-        const Icon = ({ name, className }) => {
-            const iconHtml = lucide.createIcons({
-                icons: { [name]: {} },
-                attrs: { class: className }
-            });
-            return <i data-lucide={name} className={className}></i>;
-        };
-
-        // Simulated dynamic data
-        const initialRobotsData = { total: 24, online: 18 };
-        const initialTasksData = { active: 16, status: 'In Progress', todayCompleted: 128, increase: '+18%' };
-        const initialBatteryAlertsData = { batteryAvg: 78, alerts: 8 };
-        const initialRobotMapData = [
-          { id: 'R1-05', x: 10, y: 24, status: 'offline', hasAlert: true },
-          { id: 'R1-01', x: 24, y: 90, status: 'online' },
-          { id: 'R2-03', x: 45, y: 6, status: 'online' },
-          { id: 'R1-02', x: 35, y: 40, status: 'busy' },
-          { id: 'R3-01', x: 75, y: 10, status: 'charging' },
-        ];
-        const initialHighlightedRobot = {
-          id: 'R2-03', status: 'online', model: 'NEXBOT Pro', battery: 86, location: '1F - Restaurant', taskStatus: 'Delivering'
-        };
-        const initialRecentAlerts = [
-          { id: 1, type: 'low_battery', robot: 'R1-05', message: 'R1-05 battery below 20%' },
-          { id: 2, type: 'blocked_path', robot: 'R2-01', message: 'R2-01 path is blocked' },
-          { id: 3, type: 'spill_detected', robot: 'R2-02', message: 'R2-02 tray spill detected' },
-          { id: 4, type: 'maintenance_due', robot: 'R1-03', message: 'R1-03 scheduled maintenance' },
-        ];
-
-        function App() {
-          const [currentView, setCurrentView] = useState('dashboard');
+        <form id="dispatch-form" onsubmit="handleDispatchTask(event)" class="space-y-4 text-sm">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1.5 font-medium">Select Robot Unit</label>
+            <select id="dispatch-robot-select" class="w-full bg-[#161f30] border border-gray-800 text-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <!-- Rendered via JS -->
+            </select>
+          </div>
           
-          const [batteryAlertsData, setBatteryAlertsData] = useState(initialBatteryAlertsData);
-          const [highlightedRobot, setHighlightedRobot] = useState(initialHighlightedRobot);
-          const [robotMapData, setRobotMapData] = useState(initialRobotMapData);
-
-          // Update icons when component renders
-          useEffect(() => {
-              lucide.createIcons();
-          });
+          <div>
+            <label class="block text-xs text-gray-400 mb-1.5 font-medium">Task Action</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex items-center gap-2 bg-[#161f30] border border-gray-800 rounded-xl p-3 cursor-pointer hover:bg-blue-950/20 hover:border-blue-500/50 transition-all">
+                <input type="radio" name="dispatch-action" value="Delivering" checked class="accent-blue-500">
+                <span class="text-xs text-gray-200 font-medium">Deliver Goods</span>
+              </label>
+              <label class="flex items-center gap-2 bg-[#161f30] border border-gray-800 rounded-xl p-3 cursor-pointer hover:bg-blue-950/20 hover:border-blue-500/50 transition-all">
+                <input type="radio" name="dispatch-action" value="Cleaning" class="accent-blue-500">
+                <span class="text-xs text-gray-200 font-medium">Sanitize / Clean</span>
+              </label>
+            </div>
+          </div>
           
-          // Force icon update when view changes
-          useEffect(() => {
-              setTimeout(() => lucide.createIcons(), 50);
-          }, [currentView, robotMapData]);
+          <div>
+            <label class="block text-xs text-gray-400 mb-1.5 font-medium">Destination Zone</label>
+            <select id="dispatch-zone" class="w-full bg-[#161f30] border border-gray-800 text-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="1F - Lobby">1F - Lobby</option>
+              <option value="1F - Restaurant">1F - Restaurant</option>
+              <option value="1F - Ballroom">1F - Ballroom</option>
+              <option value="1F - Concierge">1F - Concierge</option>
+              <option value="1F - Charging Station">1F - Charging Station</option>
+            </select>
+          </div>
 
-          useEffect(() => {
-            const interval = setInterval(() => {
-              setBatteryAlertsData(prev => ({ ...prev, batteryAvg: Math.max(0, Math.min(100, prev.batteryAvg + (Math.random() > 0.5 ? 1 : -1))) }));
-              setHighlightedRobot(prev => ({
-                ...prev,
-                battery: Math.max(0, Math.min(100, prev.battery + (Math.random() > 0.7 ? 1 : -1))),
-                taskStatus: Math.random() > 0.8 ? (prev.taskStatus === 'Delivering' ? 'Standby' : 'Delivering') : prev.taskStatus
-              }));
-               setRobotMapData(prev => prev.map(robot => ({
-                ...robot,
-                x: Math.max(0, Math.min(90, robot.x + (Math.random() - 0.5) * 2)),
-                y: Math.max(0, Math.min(90, robot.y + (Math.random() - 0.5) * 2))
-              })));
-            }, 3000);
-            return () => clearInterval(interval);
-          }, []);
+          <div>
+            <label class="block text-xs text-gray-400 mb-1.5 font-medium">Payload Weight estimate (kg)</label>
+            <input id="dispatch-payload" type="number" min="0" max="20" value="3" class="w-full bg-[#161f30] border border-gray-800 text-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          
+          <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-blue-500/20">
+            Confirm & Dispatch Now
+          </button>
+        </form>
+      </div>
+    </div>
 
-          const renderDashboard = () => (
-            <div className="pb-24">
-              <header className="px-4 pt-6 pb-4 bg-[#0A0F1A] sticky top-0 z-50">
-                <div className="flex justify-between items-center mb-6">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden border border-slate-800">
-                      <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Nexbot&backgroundColor=1e3a8a" alt="NEXBOT Logo" className="w-full h-full object-contain bg-slate-900" />
-                    </div>
-                    <div>
-                      <h1 className="font-bold text-lg tracking-wide text-white leading-tight">NEXBOT</h1>
-                      <p className="text-xs text-slate-400 font-medium">Fleet Management</p>
+    <!-- Toast Notification Wrapper -->
+    <div id="toast-container" class="absolute top-16 left-1/2 -translate-x-1/2 w-[90%] z-50 flex flex-col gap-2 pointer-events-none">
+      <!-- Toasts inserted programmatically -->
+    </div>
+
+  </div>
+
+  <script>
+    // System State Storage
+    const state = {
+      currentView: 'dashboard',
+      history: ['dashboard'],
+      highlightIdx: 0,
+      activeRobotTab: 'all',
+      searchQuery: '',
+      metrics: { total: 24, online: 18, active: 16, completed: 128, battery: 78, alerts: 8 },
+      tasks: { inProgress: 16, pending: 12, completed: 128, failed: 4, cancelled: 2 },
+      robots: [
+        { id: 'R2-03', status: 'online', x: 50, y: 15, battery: 86, location: '1F - Restaurant', activity: 'Delivering', heading: 120, coords: {x: 12.45, y: 8.32}, voltage: 24.6, temp: 31, payload: 5.2, uptimeMinutes: 3752 },
+        { id: 'R1-04', status: 'busy', x: 35, y: 28, battery: 42, location: '1F - Lobby', activity: 'Cleaning', heading: 45, coords: {x: 8.12, y: 15.4}, voltage: 23.1, temp: 34, payload: 1.2, uptimeMinutes: 1420 },
+        { id: 'R1-01', status: 'charging', x: 70, y: 25, battery: 12, location: '1F - Charging Station', activity: 'Charging', heading: 0, coords: {x: 2.5, y: 2.5}, voltage: 26.2, temp: 38, payload: 0, uptimeMinutes: 8500 },
+        { id: 'R1-05', status: 'offline', x: 15, y: 35, battery: 5, location: '1F - Storage', activity: 'Offline', heading: 180, coords: {x: 0, y: 0}, voltage: 21.0, temp: 22, payload: 0, uptimeMinutes: 0 },
+      ],
+      activeTelemetryTab: 'Overview'
+    };
+
+    // Helper: Build cute robot visual model HTML markup
+    function getRobotAvatarHTML(status, customClass = '') {
+      const isOffline = status === 'offline';
+      const glowColorClass = isOffline ? 'bg-red-500 shadow-[0_0_5px_#ef4444]' : 'bg-cyan-400 shadow-[0_0_5px_#22d3ee]';
+      const sideGlowClass = isOffline ? 'bg-gray-500' : 'bg-blue-500 shadow-[0_0_5px_#3b82f6]';
+      
+      return `
+        <div class="relative bg-gradient-to-b from-gray-700 to-gray-900 rounded-t-lg rounded-b-md shadow-inner overflow-hidden border border-gray-600/50 flex flex-col justify-end ${customClass}">
+          <div class="absolute top-2 left-1/2 -translate-x-1/2 w-[60%] h-[25%] bg-black rounded border border-gray-600 flex flex-col items-center justify-center">
+            <div class="w-[60%] h-[10%] rounded-full mb-1 transition-colors duration-500 ${glowColorClass}"></div>
+            <div class="w-[40%] h-[10%] rounded-full transition-colors duration-500 ${glowColorClass}"></div>
+          </div>
+          <div class="absolute top-[40%] w-full px-1.5 space-y-1">
+            <div class="h-[2px] bg-gray-600 w-full"></div>
+            <div class="h-[2px] bg-gray-600 w-full"></div>
+          </div>
+          <div class="h-[25%] w-[80%] mx-auto bg-gray-800 border-x-[3px] border-b-[3px] border-gray-700 rounded-b"></div>
+          <div class="absolute bottom-0.5 left-0 w-[15%] aspect-square rounded-full border-2 border-gray-900 transition-colors ${sideGlowClass}"></div>
+          <div class="absolute bottom-0.5 right-0 w-[15%] aspect-square rounded-full border-2 border-gray-900 transition-colors ${sideGlowClass}"></div>
+        </div>
+      `;
+    }
+
+    // Toast alerts helper system
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      let icon = 'info';
+      let borderCol = 'border-blue-500/30';
+      let bgCol = 'bg-blue-950/80';
+      let textCol = 'text-blue-200';
+      
+      if (type === 'success') {
+        icon = 'check-circle-2';
+        borderCol = 'border-green-500/30';
+        bgCol = 'bg-green-950/80';
+        textCol = 'text-green-200';
+      } else if (type === 'warning') {
+        icon = 'alert-triangle';
+        borderCol = 'border-amber-500/30';
+        bgCol = 'bg-amber-950/80';
+        textCol = 'text-amber-200';
+      }
+      
+      toast.className = `p-3 rounded-xl border ${borderCol} ${bgCol} ${textCol} backdrop-blur-md shadow-lg flex items-center gap-2 text-xs transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+      toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i>
+        <span class="font-medium">${message}</span>
+      `;
+      
+      container.appendChild(toast);
+      lucide.createIcons();
+      
+      // Animate entry
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 50);
+      
+      // Self-destruct logic
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Format uptime helper
+    function formatUptime(mins) {
+      if (mins === 0) return '0m';
+      const d = Math.floor(mins / (24 * 60));
+      const h = Math.floor((mins % (24 * 60)) / 60);
+      const m = Math.floor(mins % 60);
+      return `${d}d ${h}h ${m}m`;
+    }
+
+    function navigate(view) {
+      if (state.currentView !== view) {
+        state.history.push(view);
+        state.currentView = view;
+        renderApp();
+      }
+    }
+
+    function goBack() {
+      if (state.history.length > 1) {
+        state.history.pop();
+        state.currentView = state.history[state.history.length - 1];
+        renderApp();
+      }
+    }
+
+    function changeHighlight(idx) {
+      state.highlightIdx = idx;
+      if (state.currentView === 'dashboard') {
+        updateDashboardDynamic();
+      } else {
+        renderApp();
+      }
+    }
+
+    function setRobotTab(tab) {
+      state.activeRobotTab = tab;
+      const listContainer = document.getElementById('robots-list-container');
+      if (listContainer) {
+        updateRobotsDynamic();
+        // Re-active Tab Line Indicators
+        const tabs = ['all', 'online', 'busy', 'offline', 'charging'];
+        tabs.forEach((tName) => {
+          const indicator = document.getElementById(`tab-indicator-${tName}`);
+          if (indicator) {
+            if (tName === tab) {
+              indicator.classList.remove('hidden');
+            } else {
+              indicator.classList.add('hidden');
+            }
+          }
+        });
+      } else {
+        renderApp();
+      }
+    }
+
+    function setTelemetryTab(tab) {
+      state.activeTelemetryTab = tab;
+      renderApp();
+    }
+
+    // Open & Close dispatch modal handlers
+    function openDispatchModal() {
+      const modal = document.getElementById('dispatch-modal');
+      const select = document.getElementById('dispatch-robot-select');
+      
+      select.innerHTML = state.robots.map(r => `
+        <option value="${r.id}" ${r.status === 'offline' ? 'disabled' : ''}>
+          ${r.id} (${r.status.toUpperCase()}) - Battery: ${Math.round(r.battery)}%
+        </option>
+      `).join('');
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeDispatchModal() {
+      document.getElementById('dispatch-modal').classList.add('hidden');
+    }
+
+    function handleDispatchTask(e) {
+      e.preventDefault();
+      const robotId = document.getElementById('dispatch-robot-select').value;
+      const action = document.querySelector('input[name="dispatch-action"]:checked').value;
+      const destination = document.getElementById('dispatch-zone').value;
+      const payload = parseFloat(document.getElementById('dispatch-payload').value) || 0;
+
+      const robotIndex = state.robots.findIndex(r => r.id === robotId);
+      if (robotIndex !== -1) {
+        state.robots[robotIndex].status = 'busy';
+        state.robots[robotIndex].activity = action;
+        state.robots[robotIndex].location = destination;
+        state.robots[robotIndex].payload = payload;
+        
+        state.tasks.inProgress += 1;
+        state.metrics.active += 1;
+        
+        showToast(`Dispatched ${robotId} to ${destination} for ${action}!`, 'success');
+        closeDispatchModal();
+        
+        if (state.currentView === 'dashboard') {
+          updateDashboardDynamic();
+        } else {
+          renderApp();
+        }
+      }
+    }
+
+    // Simulation logic to update coordinates, battery values, dynamic logs
+    setInterval(() => {
+      state.robots = state.robots.map(r => {
+        if (r.status === 'charging' || r.status === 'offline') {
+          if (r.status === 'charging') {
+            return { 
+              ...r, 
+              battery: Math.min(100, r.battery + 1.2), 
+              uptimeMinutes: r.uptimeMinutes + 1 
+            };
+          }
+          return r;
+        }
+        
+        return {
+          ...r,
+          x: Math.max(15, Math.min(85, r.x + (Math.random() - 0.5) * 6)), 
+          y: Math.max(15, Math.min(85, r.y + (Math.random() - 0.5) * 6)), 
+          battery: Math.max(0, r.battery - (Math.random() * 0.4)),
+          heading: (r.heading + (Math.random() - 0.5) * 12 + 360) % 360,
+          coords: {
+            x: r.coords.x + (Math.random() - 0.5) * 0.4,
+            y: r.coords.y + (Math.random() - 0.5) * 0.4
+          },
+          voltage: Math.max(22.0, Math.min(26.0, r.voltage + (Math.random() - 0.5) * 0.1)),
+          temp: Math.max(25, Math.min(45, r.temp + (Math.random() - 0.5) * 0.4)),
+          uptimeMinutes: r.uptimeMinutes + 1
+        };
+      });
+
+      if (Math.random() > 0.6) {
+        state.metrics.battery = Math.max(10, Math.min(100, state.metrics.battery + (Math.random() > 0.5 ? 0.2 : -0.2)));
+        const finishedTask = Math.random() > 0.8;
+        if (finishedTask) {
+          state.tasks.completed += 1;
+          state.tasks.inProgress = Math.max(1, state.tasks.inProgress - 1);
+          showToast("A scheduled delivery dispatch has completed successfully.", "success");
+        }
+      }
+
+      // NO FLICKER CRITICAL FIX: Instead of calling the heavy renderApp(), execute precise targets!
+      if (state.currentView === 'dashboard') {
+        updateDashboardDynamic();
+      } else if (state.currentView === 'robots') {
+        updateRobotsDynamic();
+      } else if (state.currentView === 'robot_details') {
+        updateRobotDetailsDynamic();
+      }
+    }, 3000);
+
+    // Auto-cycle Highlighted robot on Dashboard
+    setInterval(() => {
+      if (state.currentView === 'dashboard') {
+        state.highlightIdx = (state.highlightIdx + 1) % state.robots.length;
+        updateDashboardDynamic();
+      }
+    }, 12000);
+
+    function renderApp() {
+      renderHeader();
+      renderBottomNav();
+      
+      const mainContent = document.getElementById('main-content');
+      
+      if (state.currentView === 'dashboard') {
+        renderDashboardSkeleton(mainContent);
+      } else if (state.currentView === 'robots') {
+        renderRobots(mainContent);
+      } else if (state.currentView === 'robot_details') {
+        renderRobotDetails(mainContent);
+      } else if (state.currentView === 'settings') {
+        renderSettings(mainContent);
+      } else if (state.currentView === 'tasks') {
+        renderTasks(mainContent);
+      }
+      
+      lucide.createIcons();
+    }
+
+    function renderHeader() {
+      const header = document.getElementById('app-header');
+      if (state.currentView === 'dashboard' || state.currentView === 'settings' || state.currentView === 'tasks') {
+        header.classList.remove('hidden');
+        header.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
+              <i data-lucide="bot" class="text-blue-500 w-6 h-6"></i>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold tracking-wide text-gray-100 uppercase leading-none">Nexbot</h1>
+              <span class="text-xs text-gray-400">Fleet Management</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="relative cursor-pointer" onclick="showToast('Your fleet systems logs are clean. 12 background processes active.', 'success')">
+              <i data-lucide="bell" class="w-6 h-6 text-gray-400"></i>
+              <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#070b14]">12</span>
+            </div>
+            <div onclick="navigate('settings')" class="w-8 h-8 rounded-full bg-gray-600 overflow-hidden border border-gray-500 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
+              <div class="w-full h-full bg-gradient-to-tr from-gray-500 to-gray-300 flex items-center justify-center">
+                <i data-lucide="user" class="w-5 h-5 text-gray-100"></i>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        header.classList.add('hidden');
+      }
+    }
+
+    function renderBottomNav() {
+      const navs = ['dashboard', 'robots', 'settings', 'tasks'];
+      navs.forEach(nav => {
+        const btn = document.getElementById(`nav-${nav}`);
+        if (btn) {
+          if (state.currentView === nav) {
+            btn.className = "flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-xl mb-1 mx-1 text-blue-500 bg-blue-900/20 transition-all-300";
+          } else {
+            btn.className = "flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-xl mb-1 mx-1 text-gray-500 hover:text-gray-300 transition-all-300";
+          }
+        }
+      });
+    }
+
+    function renderDashboardSkeleton(container) {
+      container.innerHTML = `
+        <div class="flex-1 px-4 flex flex-col gap-5 overflow-y-auto hide-scrollbar animate-slide-in pb-[90px]">
+          
+          <!-- Location & Systems Header -->
+          <div class="flex items-center justify-between mt-2 shrink-0">
+            <button class="flex items-center gap-2 bg-[#121929] hover:bg-[#1a233a] transition-colors px-4 py-2.5 rounded-xl border border-gray-800" onclick="showToast('Switched branch location profiles.', 'info')">
+              <span class="text-xs font-medium text-gray-200">Grand Hotel Downtown</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+            </button>
+            <div class="flex items-center gap-2 bg-green-500/10 px-3 py-2.5 rounded-xl border border-green-500/20">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-green-500"></i>
+              <span class="text-xs font-medium text-green-500">All Systems Ok</span>
+            </div>
+          </div>
+
+          <!-- Target Metrics row -->
+          <div class="flex overflow-x-auto gap-3 pb-2 -mx-4 px-4 snap-x hide-scrollbar shrink-0">
+            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-gray-800/60 snap-start shrink-0 flex flex-col justify-between">
+              <div>
+                <p class="text-[10px] text-gray-400 mb-1">Total Robots</p>
+                <div class="flex items-end justify-between">
+                  <span id="metric-total" class="text-3xl font-light text-white">-</span>
+                  <div class="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                    <i data-lucide="bot" class="w-4 h-4 text-blue-500"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 mt-3">
+                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                <span id="metric-online" class="text-[10px] text-gray-400">Online: -</span>
+              </div>
+            </div>
+            
+            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-gray-800/60 snap-start shrink-0 flex flex-col justify-between">
+              <div>
+                <p class="text-[10px] text-gray-400 mb-1">Active Tasks</p>
+                <div class="flex items-end justify-between">
+                  <span id="metric-active" class="text-3xl font-light text-white">-</span>
+                  <i data-lucide="clipboard-list" class="w-6 h-6 text-blue-400 mb-1"></i>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 mt-3">
+                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span class="text-[10px] text-blue-400 font-medium">In Progress</span>
+              </div>
+            </div>
+
+            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-gray-800/60 snap-start shrink-0 flex flex-col justify-between">
+              <div>
+                <p class="text-[10px] text-gray-400 mb-1">Completed Today</p>
+                <div class="flex items-end justify-between">
+                  <span id="metric-completed" class="text-3xl font-light text-white">-</span>
+                  <i data-lucide="activity" class="w-6 h-6 text-gray-500 mb-1"></i>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 mt-3">
+                <span class="text-[10px] text-green-400 font-medium">+18%</span>
+                <span class="text-[10px] text-gray-500">vs yesterday</span>
+              </div>
+            </div>
+
+            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-gray-800/60 snap-start shrink-0 flex flex-col justify-between">
+              <div>
+                <p class="text-[10px] text-gray-400 mb-1">Battery Average</p>
+                <div class="flex items-end justify-between">
+                  <span id="metric-battery" class="text-3xl font-light text-white">-%</span>
+                  <i data-lucide="battery" class="w-6 h-6 text-yellow-500 mb-1"></i>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 mt-3">
+                <span class="text-[10px] text-gray-400">Health Range Optimal</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floorplan map background with dedicated Robot Pin overlay container -->
+          <div class="bg-[#121929] rounded-2xl border border-gray-800/60 overflow-hidden shrink-0">
+            <div class="flex items-center justify-between p-4 pb-2">
+              <button class="flex items-center gap-2">
+                <h2 class="text-xs font-semibold text-gray-200 uppercase tracking-wider">Live Map <span class="text-gray-500">— 1st Floor</span></h2>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+              </button>
+              <div class="flex gap-2">
+                <button onclick="showToast('Overlay layers updated', 'info')" class="p-1.5 bg-[#1a233a] rounded-lg border border-gray-700/50 hover:bg-[#222e4c] transition-colors">
+                  <i data-lucide="layers" class="w-4 h-4 text-gray-300"></i>
+                </button>
+                <button onclick="showToast('Expanding map grid views...', 'info')" class="p-1.5 bg-[#1a233a] rounded-lg border border-gray-700/50 hover:bg-[#222e4c] transition-colors">
+                  <i data-lucide="maximize" class="w-4 h-4 text-gray-300"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- SVG Grid (Never deleted on ticks, avoiding screen flash) -->
+            <div class="h-64 relative bg-[#0a101d] border-y border-gray-800/50 overflow-hidden">
+              <svg width="100%" height="100%" class="absolute inset-0 opacity-40">
+                <g stroke="#1e293b" stroke-width="1" fill="none">
+                  <rect x="10%" y="10%" width="30%" height="30%" />
+                  <rect x="45%" y="10%" width="20%" height="40%" />
+                  <rect x="70%" y="10%" width="20%" height="30%" />
+                  <rect x="10%" y="45%" width="40%" height="45%" />
+                  <rect x="55%" y="55%" width="35%" height="35%" />
+                  <path d="M 40% 10% L 40% 40% M 65% 10% L 65% 50% M 10% 40% L 90% 40%" />
+                  <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="0.5" opacity="0.3"/>
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#grid)" />
+                </g>
+                <g fill="#334155" font-size="8" font-family="sans-serif" font-weight="bold" text-anchor="middle">
+                  <text x="25%" y="25%">LOBBY</text>
+                  <text x="55%" y="30%">ELEVATOR</text>
+                  <text x="80%" y="25%">CONCIERGE</text>
+                  <text x="30%" y="70%">RESTAURANT</text>
+                  <text x="72%" y="72%">BALLROOM</text>
+                </g>
+              </svg>
+              
+              <svg class="absolute inset-0 w-full h-full pointer-events-none z-10">
+                <path d="M 50% 20% L 50% 30% L 70% 35% L 70% 50% L 68% 55%" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4,4" class="animate-pulse"/>
+                <circle cx="50%" cy="30%" r="4" fill="#3b82f6" opacity="0.5"/>
+              </svg>
+              
+              <!-- Precise Overlay containing only absolute-positioned pins, updated without wiping parent grid -->
+              <div id="map-robots-overlay" class="absolute inset-0 z-20"></div>
+            </div>
+
+            <!-- Floor Map Legend Details -->
+            <div class="m-3 px-3 py-2 flex flex-wrap gap-x-3 gap-y-1 justify-center bg-[#0d121c] rounded-xl border border-gray-800/60">
+              <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div><span class="text-[9px] text-gray-300">Online</span></div>
+              <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div><span class="text-[9px] text-gray-300">Busy</span></div>
+              <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div><span class="text-[9px] text-gray-300">Charging</span></div>
+              <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-red-500"></div><span class="text-[9px] text-gray-300">Offline</span></div>
+              <div class="flex items-center gap-1.5"><div class="w-3 h-0 border-t border-dashed border-blue-500"></div><span class="text-[9px] text-gray-300">Route</span></div>
+            </div>
+          </div>
+
+          <!-- Highlight Robot Showcase Component (Targeted tags inside) -->
+          <div class="bg-[#121929] rounded-2xl border border-gray-800/60 p-4 shrink-0">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-200 mb-3 flex justify-between">
+              Robot Highlight<span class="text-[10px] text-gray-500 font-normal">Auto-cycling active</span>
+            </h2>
+            <div class="flex items-stretch gap-3 mb-4">
+              <!-- Reusable avatar frame template helper (Dynamic) -->
+              <div id="highlight-avatar" class="w-[60px] h-[78px] shrink-0"></div>
+              
+              <div class="flex-1 min-w-0 flex flex-col justify-center py-0.5">
+                <div class="flex items-center gap-1.5 mb-1.5">
+                  <h3 id="highlight-id" class="text-[15px] font-bold text-white truncate">-</h3>
+                  <div id="highlight-status-pill" class="flex items-center gap-1 px-1 py-0.5 rounded text-[8px] border transition-colors"></div>
+                </div>
+                
+                <div class="grid grid-cols-[55px_1fr] gap-x-1 gap-y-1 text-[9px]">
+                  <span class="text-gray-500">Model</span><span class="text-gray-200 font-medium truncate">NEXBOT Pro v2</span>
+                  <span class="text-gray-500">Battery</span>
+                  <div class="flex items-center gap-1.5">
+                    <span id="highlight-battery-percent" class="text-gray-200 font-medium w-5 transition-all">-%</span>
+                    <div class="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
+                      <div id="highlight-battery-bar" class="h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <Icon name="bell" className="w-6 h-6 text-slate-300" />
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#0A0F1A]">
-                        {batteryAlertsData.alerts}
-                      </span>
+                  <span class="text-gray-500">Location</span><span id="highlight-location" class="text-gray-200 font-medium truncate">-</span>
+                  <span class="text-gray-500">Status</span><span id="highlight-activity" class="text-gray-200 font-medium truncate">-</span>
+                </div>
+              </div>
+
+              <!-- Camera View frame with dynamic image overlay to completely prevent reload flashes -->
+              <div class="w-[110px] shrink-0 relative bg-[#1e293b] rounded-xl overflow-hidden border border-gray-700">
+                <div id="highlight-camera-live" class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600')] bg-cover bg-center mix-blend-luminosity transition-opacity duration-1000" style="opacity: 0.6"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#121929] to-transparent opacity-60"></div>
+                <div id="highlight-camera-status" class="absolute top-1 left-1 flex items-center gap-1 bg-black/60 backdrop-blur-sm px-1 py-0.5 rounded text-[7px] text-gray-200 border border-white/10"></div>
+              </div>
+            </div>
+
+            <button onclick="navigate('robot_details')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 transition-colors text-white text-xs font-semibold rounded-xl shadow-[0_4px_14px_0_rgba(37,99,235,0.3)]">
+              Open Telemetry Inspector
+            </button>
+          </div>
+
+          <!-- Charts Sections -->
+          <div class="grid grid-cols-2 gap-4 shrink-0">
+            <!-- Tasks Donut Layout -->
+            <div class="bg-[#121929] rounded-2xl border border-gray-800/60 p-3 relative">
+              <h3 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Tasks Log</h3>
+              <div class="flex items-center gap-3">
+                <div class="relative w-[65px] h-[65px] shrink-0">
+                  <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="14" />
+                    <circle id="tasks-donut-circle" cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="14" stroke-dasharray="0 251" stroke-dashoffset="0" stroke-linecap="butt" class="transition-all duration-1000" />
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="tasks-total-center" class="text-sm font-semibold text-white">-</span>
+                    <span class="text-[7px] text-gray-500">Total</span>
+                  </div>
+                </div>
+                
+                <div class="flex-1 space-y-1 text-[8px]">
+                  <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-1"><div class="w-1 h-1 rounded-full bg-blue-500"></div><span class="text-gray-400">Active</span></div>
+                    <span id="tasks-active-count" class="text-blue-400 font-bold">-</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-1"><div class="w-1 h-1 rounded-full bg-green-500"></div><span class="text-gray-400">Success</span></div>
+                    <span id="tasks-completed-count" class="text-green-500 font-bold">-</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-1"><div class="w-1 h-1 rounded-full bg-red-500"></div><span class="text-gray-400">Failed</span></div>
+                    <span id="tasks-failed-count" class="text-red-500 font-bold">-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Battery Health Trend Chart -->
+            <div class="bg-[#121929] rounded-2xl border border-gray-800/60 p-3 relative flex flex-col justify-between">
+              <div class="flex justify-between items-start">
+                 <h3 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Avg Battery</h3>
+                 <span id="battery-trend-avg" class="text-[9px] text-green-400 font-medium">-%</span>
+              </div>
+              <div class="h-10 w-full relative mt-2">
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none" class="w-full h-full">
+                  <path d="M0,20 Q15,5 30,15 T60,8 T90,12 T100,5" fill="none" stroke="#3b82f6" stroke-width="1.5" />
+                  <path d="M0,25 Q15,10 30,22 T60,14 T90,20 T100,12" fill="none" stroke="#22c55e" stroke-width="1" stroke-dasharray="2,2" />
+                </svg>
+              </div>
+              <div class="flex justify-between text-[7px] text-gray-500 mt-1">
+                <span>00:00</span>
+                <span>12:00</span>
+                <span>24:00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick System Alert Log (Static structure) -->
+          <div class="mb-4 shrink-0">
+            <div class="flex items-center justify-between mb-2 px-1">
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-200">Alert Center Log</h2>
+              <button onclick="showToast('Loading full system alert history...', 'info')" class="text-[10px] text-blue-400 hover:text-blue-300">Archive Log</button>
+            </div>
+            
+            <div class="bg-[#121929] rounded-xl border border-gray-800/60 p-3 space-y-2">
+              <div class="grid grid-cols-2 gap-2 text-[8px] border-b border-gray-800/50 pb-2">
+                <div class="flex items-center gap-1">
+                  <i data-lucide="alert-triangle" class="w-3 h-3 text-red-500 shrink-0"></i>
+                  <span class="text-gray-200">R1-05 Critical Low Voltage</span>
+                </div>
+                <span class="text-right text-gray-500">2 min ago</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-[8px]">
+                <div class="flex items-center gap-1">
+                  <i data-lucide="ban" class="w-3 h-3 text-yellow-500 shrink-0"></i>
+                  <span class="text-gray-200">Lobby path obstacle blocked</span>
+                </div>
+                <span class="text-right text-gray-500">14 min ago</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      `;
+      
+      // Populate first set of active values instantly to start telemetry stream
+      updateDashboardDynamic();
+    }
+
+    function updateDashboardDynamic() {
+      if (state.currentView !== 'dashboard') return;
+      
+      const highlightedRobot = state.robots[state.highlightIdx];
+      const totalTasks = state.tasks.inProgress + state.tasks.pending + state.tasks.completed + state.tasks.failed + state.tasks.cancelled;
+      const progressPercent = Math.round((state.tasks.completed / totalTasks) * 251);
+
+      // 1. Update Metrics Rows
+      const metricTotal = document.getElementById('metric-total');
+      if (metricTotal) metricTotal.textContent = state.metrics.total;
+
+      const metricOnline = document.getElementById('metric-online');
+      if (metricOnline) {
+        const connectedCount = state.robots.filter(x => x.status !== 'offline').length;
+        metricOnline.textContent = `Online: ${connectedCount}`;
+      }
+
+      const metricActive = document.getElementById('metric-active');
+      if (metricActive) metricActive.textContent = state.tasks.inProgress;
+
+      const metricCompleted = document.getElementById('metric-completed');
+      if (metricCompleted) metricCompleted.textContent = state.tasks.completed;
+
+      const metricBattery = document.getElementById('metric-battery');
+      if (metricBattery) metricBattery.textContent = `${Math.round(state.metrics.battery)}%`;
+
+      // 2. Update Map Robots Overlay Pins selectively (Background SVG is left untouched!)
+      const mapRobotsOverlay = document.getElementById('map-robots-overlay');
+      if (mapRobotsOverlay) {
+        mapRobotsOverlay.innerHTML = state.robots.map((robot, rIdx) => {
+          const isCurrentHighlight = rIdx === state.highlightIdx;
+          const statusGlow = robot.status === 'online' ? 'bg-green-500/20 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
+                           : robot.status === 'busy' ? 'bg-blue-500/20 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                           : robot.status === 'charging' ? 'bg-yellow-500/20 border-yellow-500' 
+                           : 'bg-red-500/20 border-red-500';
+          
+          const statusIconCol = robot.status === 'online' ? 'text-green-400' 
+                              : robot.status === 'busy' ? 'text-blue-400' 
+                              : robot.status === 'charging' ? 'text-yellow-400' 
+                              : 'text-red-400';
+
+          return `
+            <div onclick="changeHighlight(${rIdx})" class="absolute flex flex-col items-center z-20 transition-all duration-1000 ease-linear cursor-pointer" style="top: ${robot.y}%; left: ${robot.x}%; transform: translate(-50%, -50%)">
+              <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center ${statusGlow} ${isCurrentHighlight ? 'ring-2 ring-white scale-110' : ''}">
+                <i data-lucide="bot" class="w-4 h-4 ${statusIconCol}"></i>
+                ${robot.status === 'offline' ? `<i data-lucide="alert-triangle" class="absolute -right-2 -top-1 w-4 h-4 text-red-500 bg-[#0a101d] rounded-full p-0.5"></i>` : ''}
+              </div>
+              <span class="text-[9px] font-bold mt-1 bg-[#0a101d] px-1 rounded transition-colors ${statusIconCol}">${robot.id}</span>
+            </div>
+          `;
+        }).join('');
+        
+        lucide.createIcons({ node: mapRobotsOverlay });
+      }
+
+      // 3. Update Highlight Details
+      const highlightAvatar = document.getElementById('highlight-avatar');
+      if (highlightAvatar) {
+        highlightAvatar.innerHTML = getRobotAvatarHTML(highlightedRobot.status, 'w-full h-full');
+      }
+
+      const highlightId = document.getElementById('highlight-id');
+      if (highlightId) highlightId.textContent = highlightedRobot.id;
+
+      const highlightStatusPill = document.getElementById('highlight-status-pill');
+      if (highlightStatusPill) {
+        highlightStatusPill.className = `flex items-center gap-1 px-1 py-0.5 rounded text-[8px] border transition-colors ${
+          highlightedRobot.status === 'online' ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+          : highlightedRobot.status === 'busy' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+          : highlightedRobot.status === 'charging' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' 
+          : 'bg-red-500/10 text-red-400 border-red-500/20'
+        }`;
+        highlightStatusPill.innerHTML = `
+          <div class="w-1 h-1 rounded-full ${highlightedRobot.status === 'online' ? 'bg-green-500' : highlightedRobot.status === 'busy' ? 'bg-blue-500' : highlightedRobot.status === 'charging' ? 'bg-yellow-500' : 'bg-red-500'}"></div>
+          <span class="capitalize text-[8px]">${highlightedRobot.status}</span>
+        `;
+      }
+
+      const highlightBatteryPercent = document.getElementById('highlight-battery-percent');
+      if (highlightBatteryPercent) highlightBatteryPercent.textContent = `${Math.round(highlightedRobot.battery)}%`;
+
+      const highlightBatteryBar = document.getElementById('highlight-battery-bar');
+      if (highlightBatteryBar) {
+        highlightBatteryBar.className = `h-full rounded-full transition-all duration-500 ${highlightedRobot.battery > 20 ? 'bg-green-500' : 'bg-red-500'}`;
+        highlightBatteryBar.style.width = `${highlightedRobot.battery}%`;
+      }
+
+      const highlightLocation = document.getElementById('highlight-location');
+      if (highlightLocation) highlightLocation.textContent = highlightedRobot.location;
+
+      const highlightActivity = document.getElementById('highlight-activity');
+      if (highlightActivity) highlightActivity.textContent = highlightedRobot.activity;
+
+      const highlightCameraLive = document.getElementById('highlight-camera-live');
+      if (highlightCameraLive) {
+        highlightCameraLive.style.opacity = highlightedRobot.status === 'offline' ? '0.2' : '0.6';
+      }
+
+      const highlightCameraStatus = document.getElementById('highlight-camera-status');
+      if (highlightCameraStatus) {
+        highlightCameraStatus.innerHTML = `
+          <div class="w-1 h-1 rounded-full ${highlightedRobot.status === 'offline' ? 'bg-red-500' : 'bg-green-500 animate-pulse'}"></div>
+          <span>${highlightedRobot.status === 'offline' ? 'Offline' : 'Camera Live'}</span>
+        `;
+      }
+
+      // 4. Update Tasks donut offsets
+      const tasksDonutCircle = document.getElementById('tasks-donut-circle');
+      if (tasksDonutCircle) {
+        tasksDonutCircle.setAttribute('stroke-dasharray', `${progressPercent} 251`);
+      }
+
+      const tasksTotalCenter = document.getElementById('tasks-total-center');
+      if (tasksTotalCenter) tasksTotalCenter.textContent = totalTasks;
+
+      const tasksActiveCount = document.getElementById('tasks-active-count');
+      if (tasksActiveCount) tasksActiveCount.textContent = state.tasks.inProgress;
+
+      const tasksCompletedCount = document.getElementById('tasks-completed-count');
+      if (tasksCompletedCount) tasksCompletedCount.textContent = state.tasks.completed;
+
+      const tasksFailedCount = document.getElementById('tasks-failed-count');
+      if (tasksFailedCount) tasksFailedCount.textContent = state.tasks.failed;
+
+      const batteryTrendAvg = document.getElementById('battery-trend-avg');
+      if (batteryTrendAvg) batteryTrendAvg.textContent = `${Math.round(state.metrics.battery)}%`;
+    }
+
+    function renderRobots(container) {
+      container.innerHTML = `
+        <div class="flex-1 flex flex-col bg-[#070b14] overflow-hidden animate-slide-in">
+          <header class="px-5 pt-12 pb-4 flex items-center justify-between bg-[#070b14] shrink-0">
+            <div class="flex items-center gap-2">
+              <i data-lucide="menu" class="w-5 h-5 text-gray-300 cursor-pointer" onclick="showToast('Open side-panel module (Simulation mock)', 'info')"></i>
+              <h1 class="text-lg font-bold text-gray-100">Robots Fleet</h1>
+            </div>
+            <div class="flex gap-4">
+              <i data-lucide="search" class="w-5 h-5 text-gray-300 cursor-pointer" onclick="showToast('Search engine ready', 'info')"></i>
+              <i data-lucide="filter" class="w-5 h-5 text-gray-300 cursor-pointer" onclick="showToast('Active filters default', 'info')"></i>
+            </div>
+          </header>
+
+          <!-- Robot Tabs -->
+          <div class="flex justify-between items-center px-4 border-b border-gray-800/80 mb-4 shrink-0 overflow-x-auto hide-scrollbar">
+            ${['All', 'Online', 'Busy', 'Offline', 'Charging'].map(tab => {
+              const tabLower = tab.toLowerCase();
+              const isActive = state.activeRobotTab === tabLower;
+              const count = tabLower === 'all' ? state.robots.length : state.robots.filter(r => r.status === tabLower).length;
+              return `
+                <button onclick="setRobotTab('${tabLower}')" class="pb-3 text-xs font-semibold relative ${isActive ? 'text-blue-400' : 'text-gray-400 hover:text-gray-200'}">
+                  ${tab} (${count})
+                  <div id="tab-indicator-${tabLower}" class="absolute bottom-0 left-0 w-full h-[2px] bg-blue-500 rounded-t-full ${isActive ? '' : 'hidden'}"></div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Dynamic Robot List Card Loop (Updated using discrete container, no flashing header) -->
+          <div id="robots-list-container" class="flex-1 px-4 overflow-y-auto flex flex-col gap-3 pb-[90px] hide-scrollbar"></div>
+
+          <!-- Quick status update at bottom -->
+          <div class="absolute bottom-[72px] w-full px-4 py-3 border-t border-gray-800/80 bg-[#0a0f1a] flex justify-between items-center text-[10px] z-20">
+            <div class="flex items-center gap-1.5 text-gray-400">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i>
+              <span>Auto Sync active</span>
+            </div>
+            <span id="connected-count-val" class="text-green-400 font-semibold">${state.robots.filter(r => r.status !== 'offline').length} Units Connected</span>
+          </div>
+        </div>
+      `;
+      
+      updateRobotsDynamic();
+    }
+
+    // Precise DOM updates on list view items
+    function updateRobotsDynamic() {
+      const listContainer = document.getElementById('robots-list-container');
+      if (!listContainer) return;
+
+      let filtered = state.robots;
+      if (state.activeRobotTab === 'online') {
+        filtered = state.robots.filter(r => r.status === 'online');
+      } else if (state.activeRobotTab === 'busy') {
+        filtered = state.robots.filter(r => r.status === 'busy');
+      } else if (state.activeRobotTab === 'offline') {
+        filtered = state.robots.filter(r => r.status === 'offline');
+      } else if (state.activeRobotTab === 'charging') {
+        filtered = state.robots.filter(r => r.status === 'charging');
+      }
+
+      listContainer.innerHTML = filtered.length === 0 ? `
+        <div class="py-12 text-center text-xs text-gray-500">
+          <i data-lucide="info" class="w-8 h-8 mx-auto mb-2 text-gray-600"></i>
+          No robots match the current filter state
+        </div>
+      ` : filtered.map((robot) => {
+        const statusCol = robot.status === 'online' ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                         : robot.status === 'busy' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+                         : robot.status === 'charging' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' 
+                         : 'bg-red-500/10 text-red-400 border-red-500/20';
+        
+        const statusIndicatorCol = robot.status === 'online' ? 'bg-green-500' 
+                                 : robot.status === 'busy' ? 'bg-blue-500' 
+                                 : robot.status === 'charging' ? 'bg-yellow-500' 
+                                 : 'bg-red-500';
+
+        const masterIndex = state.robots.findIndex(r => r.id === robot.id);
+
+        return `
+          <div 
+            onclick="changeHighlight(${masterIndex}); navigate('robot_details');"
+            class="bg-[#121929] rounded-2xl border border-gray-800/60 p-3 flex items-stretch gap-4 cursor-pointer hover:bg-[#1a233a] transition-colors shrink-0"
+          >
+            <div class="w-[75px] shrink-0 h-[92px]">${getRobotAvatarHTML(robot.status, 'w-full h-full')}</div>
+            
+            <div class="flex-1 flex flex-col justify-between py-0.5">
+              <div class="flex justify-between items-start mb-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-base font-bold text-white">${robot.id}</h3>
+                  <div class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] border ${statusCol}">
+                    <div class="w-1.5 h-1.5 rounded-full ${statusIndicatorCol}"></div>
+                    <span class="capitalize font-semibold text-[8px]">${robot.status}</span>
+                  </div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
+              </div>
+              
+              <p class="text-[10px] text-gray-400 mb-2">NEXBOT Pro Delivery Unit</p>
+              
+              <div class="grid grid-cols-[55px_1fr] gap-y-1 text-[10px]">
+                <span class="text-gray-500 font-medium">Battery</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-gray-200 font-medium w-6">${Math.round(robot.battery)}%</span>
+                  <div class="w-20 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500 ${robot.battery > 20 ? 'bg-green-500' : 'bg-red-500'}" style="width: ${robot.battery}%"></div>
+                  </div>
+                </div>
+
+                <span class="text-gray-500 font-medium">Location</span>
+                <span class="${robot.status === 'offline' ? 'text-gray-400' : 'text-green-400'} truncate w-32 font-semibold">${robot.location}</span>
+
+                <span class="text-gray-500 font-medium">Task</span>
+                <span class="text-gray-200 truncate w-32">${robot.activity}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      lucide.createIcons({ node: listContainer });
+
+      const connectedCount = document.getElementById('connected-count-val');
+      if (connectedCount) {
+        connectedCount.textContent = `${state.robots.filter(r => r.status !== 'offline').length} Units Connected`;
+      }
+    }
+
+    function renderRobotDetails(container) {
+      container.innerHTML = `
+        <div class="flex-1 flex flex-col bg-[#070b14] overflow-hidden animate-slide-in">
+          
+          <header class="px-4 pt-12 pb-4 flex items-center justify-between bg-[#070b14] sticky top-0 z-10 shrink-0 border-b border-gray-900/10">
+            <button onclick="goBack()" class="p-1.5 hover:bg-gray-800/50 rounded-full transition-colors">
+              <i data-lucide="arrow-left" class="w-5 h-5 text-gray-300"></i>
+            </button>
+            <h1 class="text-base font-bold text-gray-100 uppercase tracking-wider">Telemetry Inspector</h1>
+            <button onclick="showToast('Commands menu opened', 'info')" class="p-1">
+              <i data-lucide="more-horizontal" class="w-5 h-5 text-gray-300"></i>
+            </button>
+          </header>
+
+          <div class="flex-1 overflow-y-auto px-4 hide-scrollbar flex flex-col gap-4 pb-[90px] pt-2">
+            
+            <!-- Unit Status Header Summary Card -->
+            <div class="flex items-start gap-4 bg-[#121929] rounded-2xl p-4 border border-gray-800/60 shrink-0">
+              <div id="details-avatar" class="w-[72px] h-[92px] shrink-0"></div>
+              
+              <div class="flex-1 flex justify-between h-[92px]">
+                <div class="flex flex-col justify-between h-full">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <h2 id="details-id" class="text-lg font-bold text-white leading-none">-</h2>
+                      <div id="details-status-pill"></div>
                     </div>
-                    <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center overflow-hidden border border-slate-600">
-                      <Icon name="user" className="w-5 h-5 text-slate-300" />
+                    <p id="details-location" class="text-[10px] text-gray-400 truncate w-36">-</p>
+                  </div>
+                  
+                  <div class="flex gap-1.5">
+                    <div class="bg-[#1a233a] rounded-lg px-2 py-1 flex flex-col">
+                      <span class="text-[7px] text-gray-500 font-medium">Firmware</span>
+                      <span class="text-[9px] font-bold text-gray-200">v2.4.6</span>
+                    </div>
+                    <div class="bg-[#1a233a] rounded-lg px-2 py-1 flex flex-col">
+                      <span class="text-[7px] text-gray-500 font-medium">Uptime</span>
+                      <span id="details-uptime" class="text-[9px] font-bold text-gray-200">-</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center bg-[#131C2D] rounded-xl p-1.5 border border-slate-800/60">
-                  <button className="flex items-center gap-2 px-3 py-2 bg-[#1C263A] rounded-lg text-sm font-medium hover:bg-[#25324D] transition-colors text-slate-200">
-                    <Icon name="building" className="w-4 h-4 text-slate-400" />
-                    Grand Hotel
-                    <Icon name="chevron-down" className="w-4 h-4 text-slate-400 ml-1" />
+                <div class="flex flex-col items-end justify-between py-0.5">
+                  <div class="flex flex-col items-end">
+                    <span class="text-[8px] text-gray-500 uppercase tracking-wider font-semibold">Battery Charge</span>
+                    <div class="flex items-center gap-1 mt-0.5">
+                      <span id="details-battery-text" class="text-xl font-bold text-white leading-none tracking-tight">-</span>
+                      <i id="details-battery-icon-zap" data-lucide="zap" class="w-3.5 h-3.5 text-green-500 animate-pulse" style="display: none;"></i>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-end mt-2">
+                    <span class="text-[7px] text-gray-500 uppercase font-semibold">Uptime Health</span>
+                    <span class="text-[9px] font-bold text-green-500">OPTIMAL</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-tabs selection filter -->
+            <div class="flex gap-4 border-b border-gray-800/80 -mx-4 px-4 overflow-x-auto hide-scrollbar shrink-0">
+              ${[
+                { name: 'Overview', icon: 'layers' },
+                { name: 'Hardware', icon: 'cpu' },
+                { name: 'Sensors', icon: 'compass' },
+              ].map(tab => {
+                const isActive = state.activeTelemetryTab === tab.name;
+                return `
+                  <button onclick="setTelemetryTab('${tab.name}')" class="flex items-center gap-1.5 pb-2 border-b-2 whitespace-nowrap ${isActive ? 'border-blue-500 text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-300'}">
+                    <i data-lucide="${tab.icon}" class="w-3.5 h-3.5"></i>
+                    <span class="text-[11px] font-bold">${tab.name}</span>
                   </button>
-                  <div className="flex items-center gap-1.5 px-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse"></div>
-                    <span className="text-xs font-medium text-green-400">All Operational</span>
-                  </div>
-                </div>
-              </header>
+                `;
+              }).join('')}
+            </div>
 
-              <main className="px-4 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[#131C2D] p-3.5 rounded-2xl border border-slate-800/60 relative overflow-hidden">
-                    <div className="text-xs text-slate-400 mb-1">Total Robots</div>
-                    <div className="flex items-end justify-between">
-                      <div className="text-2xl font-bold text-white">{initialRobotsData.total}</div>
-                      <Icon name="activity" className="w-6 h-6 text-blue-500 opacity-80" />
+            <!-- Content Rendering based on sub-tab selection -->
+            <div id="telemetry-tab-content">
+              ${state.activeTelemetryTab === 'Overview' ? `
+                
+                <!-- Location Mini Card Layout -->
+                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-800/60 shrink-0">
+                  <h3 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Zone Coordinates Tracking</h3>
+                  <div class="flex gap-4 items-stretch">
+                    <div class="flex-[3] bg-[#0a101d] rounded-xl border border-gray-800/80 relative overflow-hidden min-h-[120px]">
+                      <svg width="100%" height="100%" class="absolute inset-0 opacity-20">
+                        <g stroke="#1e293b" stroke-width="1.5" fill="none">
+                          <rect x="5%" y="10%" width="30%" height="35%" />
+                          <rect x="40%" y="10%" width="25%" height="30%" />
+                          <rect x="5%" y="55%" width="45%" height="35%" />
+                        </g>
+                      </svg>
+                      <!-- Active Radar Halo Signal -->
+                      <div class="absolute top-[40%] left-[50%] -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center">
+                        <div class="absolute inset-0 bg-blue-500/30 blur-md rounded-full scale-[2] animate-ping"></div>
+                        <div class="w-5 h-5 bg-[#0a101d] rounded-full border-2 border-blue-500 flex items-center justify-center relative shadow-[0_0_10px_rgba(59,130,246,0.8)]">
+                          <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="mt-2 flex items-center gap-1.5 text-[10px]">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                      <span className="text-slate-400">Online {initialRobotsData.online}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-[#131C2D] p-3.5 rounded-2xl border border-slate-800/60 relative overflow-hidden">
-                    <div className="text-xs text-slate-400 mb-1">Active Tasks</div>
-                    <div className="flex items-end justify-between">
-                      <div className="text-2xl font-bold text-white">{initialTasksData.active}</div>
-                      <Icon name="clipboard-list" className="w-6 h-6 text-blue-400 opacity-80" />
-                    </div>
-                    <div className="mt-2 flex items-center gap-1.5 text-[10px]">
-                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                      <span className="text-blue-400">{initialTasksData.status}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-[#131C2D] p-3.5 rounded-2xl border border-slate-800/60 relative overflow-hidden">
-                    <div className="text-xs text-slate-400 mb-1">Completed Today</div>
-                    <div className="flex items-end justify-between">
-                      <div className="text-2xl font-bold text-white">{initialTasksData.todayCompleted}</div>
-                      <Icon name="check-square" className="w-6 h-6 text-slate-400 opacity-80" />
-                    </div>
-                    <div className="mt-2 text-[10px] text-green-400 font-medium">
-                      {initialTasksData.increase} <span className="text-slate-500">vs yesterday</span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-[#131C2D] p-3.5 rounded-2xl border border-slate-800/60 flex flex-col justify-between">
-                      <div className="text-xs text-slate-400">Battery Avg</div>
-                      <div className="text-xl font-bold text-white mt-1">{batteryAlertsData.batteryAvg}<span className="text-sm font-normal text-slate-400">%</span></div>
-                      <Icon name="battery" className="w-4 h-4 text-yellow-500 mt-1" />
-                    </div>
-                    <div className="bg-[#2A1515] p-3.5 rounded-2xl border border-red-900/30 flex flex-col justify-between">
-                      <div className="text-xs text-red-400">Alerts</div>
-                      <div className="text-xl font-bold text-red-500 mt-1">{batteryAlertsData.alerts}</div>
-                      <Icon name="alert-triangle" className="w-4 h-4 text-red-500 mt-1 animate-pulse" />
-                    </div>
-                  </div>
-                </div>
-
-                <section className="bg-[#131C2D] rounded-2xl border border-slate-800/60 p-3 flex flex-col">
-                  <div className="flex justify-between items-center mb-3 px-1">
-                    <button className="flex items-center gap-1 text-sm font-semibold text-white">
-                      Live Map <span className="text-slate-400 font-normal ml-1">— 1st Floor</span>
-                      <Icon name="chevron-down" className="w-4 h-4 text-slate-400" />
-                    </button>
-                    <div className="flex gap-2">
-                      <button className="p-1.5 bg-[#1C263A] rounded-md text-slate-300 hover:text-white"><Icon name="layers" className="w-4 h-4" /></button>
-                      <button className="p-1.5 bg-[#1C263A] rounded-md text-slate-300 hover:text-white"><Icon name="maximize" className="w-4 h-4" /></button>
-                    </div>
-                  </div>
-                  
-                  <div className="relative h-56 bg-[#0E1524] rounded-xl border border-slate-700/50 overflow-hidden flex items-center justify-center">
-                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
-                    <svg className="absolute inset-0 w-full h-full" style={{ strokeDasharray: '6, 6' }}>
-                      <path d="M 60 120 L 120 120 L 120 40 L 220 40 L 220 100" fill="none" stroke="#3b82f6" strokeWidth="2" className="opacity-70" />
-                    </svg>
                     
-                    <span className="absolute top-8 left-8 text-[9px] font-bold text-blue-500/40 tracking-wider">LOBBY</span>
-                    <span className="absolute top-20 right-12 text-[9px] font-bold text-blue-500/40 tracking-wider">CONCIERGE</span>
-                    <span className="absolute bottom-6 right-20 text-[9px] font-bold text-blue-500/40 tracking-wider">BALLROOM</span>
-                    <span className="absolute bottom-8 left-4 text-[9px] font-bold text-blue-500/40 tracking-wider">RESTAURANT</span>
-
-                    {robotMapData.map(robot => {
-                      let statusBorder = 'green-500', statusShadow = 'rgba(34,197,94,0.3)', statusColor = 'text-green-400';
-                      if (robot.status === 'offline') { statusBorder = 'red-500'; statusShadow = 'rgba(239,68,68,0.3)'; statusColor = 'text-red-400';} 
-                      else if (robot.status === 'busy') { statusBorder = 'blue-500'; statusShadow = 'rgba(59,130,246,0.3)'; statusColor = 'text-blue-400';} 
-                      else if (robot.status === 'charging') { statusBorder = 'yellow-500'; statusShadow = 'rgba(234,179,8,0.3)'; statusColor = 'text-yellow-400';}
+                    <div class="flex-[2] flex flex-col justify-between py-1">
+                      <div class="flex items-center gap-2">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-blue-500"></i>
+                        <div class="flex flex-col">
+                          <span class="text-[7px] text-gray-500 uppercase leading-none">Map Sector</span>
+                          <span class="text-[11px] font-bold text-gray-200 leading-tight">Floor Sector 4A</span>
+                        </div>
+                      </div>
                       
-                      return (
-                        <div key={robot.id} className="absolute flex flex-col items-center transition-all duration-1000 ease-in-out" style={{ top: `${robot.y}%`, left: `${robot.x}%` }}>
-                          <div className="relative">
-                            <div className={`w-7 h-7 bg-[#1C263A] rounded-full border-2 border-${statusBorder} flex items-center justify-center z-10 relative shadow-[0_0_10px_${statusShadow}]`}>
-                              <Icon name="activity" className="w-3.5 h-3.5 text-white" />
-                            </div>
-                            {robot.hasAlert && <Icon name="alert-triangle" className="w-3 h-3 text-red-500 absolute -top-1 -right-2 z-20 animate-bounce" />}
-                          </div>
-                          <div className={`mt-1 bg-[#1C263A] px-1.5 py-0.5 rounded text-[9px] ${statusColor} font-medium border border-${statusBorder}/30`}>{robot.id}</div>
+                      <div class="flex items-center gap-2 mt-2">
+                        <i data-lucide="compass" class="w-4 h-4 text-gray-400"></i>
+                        <div class="flex flex-col">
+                          <span class="text-[7px] text-gray-500 uppercase leading-none">Orientation</span>
+                          <span id="details-heading" class="text-[11px] font-bold text-gray-200 leading-tight">-</span>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
 
-                  <div className="flex justify-between items-center mt-3 px-2 text-[10px] text-slate-400">
-                    <div className="flex gap-3">
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>Online</span>
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Busy</span>
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>Charging</span>
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>Offline</span>
-                    </div>
-                    <span className="flex items-center gap-1"><span className="w-4 h-[2px] bg-blue-500 opacity-70" style={{borderStyle: 'dashed'}}></span>Task Route</span>
-                  </div>
-                </section>
-
-                <section className="bg-[#131C2D] rounded-2xl border border-slate-800/60 p-4">
-                  <div className="font-semibold text-white mb-4">Robot Highlight</div>
-                  <div className="flex gap-4">
-                    <div className="w-24 h-32 bg-gradient-to-b from-[#1C263A] to-[#0A0F1A] rounded-xl flex items-center justify-center border border-slate-700/50 shadow-inner">
-                       <div className="w-16 h-20 bg-blue-900/20 rounded-lg flex flex-col items-center justify-center border border-blue-500/20 relative overflow-hidden">
-                         <div className="absolute inset-0 bg-blue-500/10 animate-pulse"></div>
-                         <div className="w-8 h-4 bg-black rounded-sm mb-1 flex items-center justify-center"><div className="w-6 h-1.5 bg-blue-400 rounded-full blur-[1px]"></div></div>
-                         <div className="w-10 h-10 bg-slate-800 rounded-md relative z-10">
-                            <div className="absolute top-1 left-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-                         </div>
-                       </div>
-                    </div>
-                    
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-xl font-bold text-white">{highlightedRobot.id}</h3>
-                          <span className={`flex items-center gap-1 text-[10px] ${highlightedRobot.status === 'online' ? 'text-green-400 bg-green-500/10 border-green-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'} px-2 py-0.5 rounded-full border`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${highlightedRobot.status === 'online' ? 'bg-green-500 shadow-[0_0_4px_#22c55e]' : 'bg-red-500'}`}></span>
-                            {highlightedRobot.status === 'online' ? 'Online' : 'Offline'}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-y-1 text-xs mb-3">
-                          <span className="text-slate-400">Model</span>
-                          <span className="text-white text-right font-medium">{highlightedRobot.model}</span>
-                          
-                          <span className="text-slate-400">Battery</span>
-                          <div className="flex items-center justify-end gap-1 text-white font-medium">
-                            {highlightedRobot.battery}%
-                            <div className="w-8 h-1 bg-slate-700 rounded-full overflow-hidden">
-                              <div className="h-full bg-green-500 rounded-full transition-all duration-500" style={{ width: `${highlightedRobot.battery}%` }}></div>
-                            </div>
-                          </div>
-                          
-                          <span className="text-slate-400">Location</span>
-                          <span className="text-white text-right font-medium">{highlightedRobot.location}</span>
-                          
-                          <span className="text-slate-400">Status</span>
-                          <span className="text-white text-right font-medium">{highlightedRobot.taskStatus}</span>
-                        </div>
+                      <div class="mt-2 text-[9px] font-mono bg-black/40 p-1.5 rounded-lg border border-gray-800">
+                        <div id="details-coords">-</div>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="mt-4 relative h-20 bg-black rounded-lg overflow-hidden border border-slate-700">
-                     <img src="https://images.unsplash.com/photo-1542314831-c6a4d27ce6a2?auto=format&fit=crop&w=400&q=80" alt="Camera Feed" className="w-full h-full object-cover opacity-60" />
-                     <div className="absolute top-2 left-2 flex items-center gap-1.5 text-[10px] text-white bg-black/60 px-1.5 py-0.5 rounded backdrop-blur-sm">
-                       <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Live Camera
-                     </div>
-                  </div>
-
-                  <button onClick={() => setCurrentView('robotDetails')} className="w-full mt-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-[0_4px_14px_rgba(37,99,235,0.3)]">
-                    View Robot Details
-                  </button>
-                </section>
-              </main>
-            </div>
-          );
-
-          const renderRobotDetails = () => (
-            <div className="pb-24 animate-in fade-in duration-300">
-              <header className="px-4 py-4 flex items-center justify-between bg-[#0A0F1A] sticky top-0 z-50">
-                <button onClick={() => setCurrentView('dashboard')}><Icon name="arrow-left" className="w-6 h-6 text-slate-200" /></button>
-                <h1 className="text-lg font-semibold text-white tracking-wide">Robot Status</h1>
-                <Icon name="more-horizontal" className="w-6 h-6 text-slate-200" />
-              </header>
-
-              <main className="px-4 space-y-4">
-                <section className="flex justify-between items-start pt-2">
-                  <div className="flex gap-3">
-                     <div className="w-16 h-20 bg-gradient-to-b from-[#1C263A] to-[#0A0F1A] rounded-xl flex items-center justify-center border border-slate-700/50 shadow-inner">
-                       <div className="w-12 h-14 bg-blue-900/20 rounded-lg flex flex-col items-center justify-center border border-blue-500/20 relative">
-                         <div className="w-6 h-3 bg-black rounded-sm mb-1 flex items-center justify-center"><div className="w-4 h-1 bg-blue-400 rounded-full blur-[1px]"></div></div>
-                         <div className="w-8 h-8 bg-slate-800 rounded-md"></div>
-                       </div>
-                    </div>
-                    <div className="flex flex-col justify-center">
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-white">R2-03</h2>
-                        <span className="flex items-center gap-1 text-[10px] font-medium text-green-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_4px_#22c55e]"></span> Online
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-1">Hotel Lobby • Floor 1</p>
-                      
-                      <div className="flex gap-2 mt-2">
-                        <div className="bg-[#1C263A] px-2 py-1 rounded-md text-[10px]">
-                          <span className="text-slate-400 block mb-0.5">Model</span>
-                          <span className="text-white font-medium">Hotel Pro</span>
-                        </div>
-                        <div className="bg-[#1C263A] px-2 py-1 rounded-md text-[10px]">
-                          <span className="text-slate-400 block mb-0.5">Firmware</span>
-                          <span className="text-white font-medium">v2.4.6</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right flex flex-col items-end">
-                     <span className="text-xs text-slate-400 mb-1">Battery</span>
-                     <div className="flex items-center gap-1">
-                       <span className="text-2xl font-bold text-white">86%</span>
-                       <Icon name="battery-charging" className="w-6 h-6 text-green-500" />
-                     </div>
-                     <span className="text-[10px] text-slate-400 mt-2">Charging Status</span>
-                     <span className="text-[10px] text-green-400 font-medium mt-0.5">Not Charging</span>
-                  </div>
-                </section>
-
-                <div className="flex overflow-x-auto gap-6 border-b border-slate-800/80 pt-2 pb-0 scrollbar-hide">
-                  <button className="flex items-center gap-1.5 pb-3 border-b-2 border-blue-500 text-blue-400 font-medium text-sm whitespace-nowrap">
-                    <Icon name="cpu" className="w-4 h-4" /> Overview
-                  </button>
-                  <button className="flex items-center gap-1.5 pb-3 border-b-2 border-transparent text-slate-400 font-medium text-sm whitespace-nowrap">
-                    <Icon name="settings" className="w-4 h-4" /> Hardware
-                  </button>
-                  <button className="flex items-center gap-1.5 pb-3 border-b-2 border-transparent text-slate-400 font-medium text-sm whitespace-nowrap">
-                    <Icon name="layers" className="w-4 h-4" /> Software
-                  </button>
                 </div>
 
-                <section>
-                  <h3 className="text-sm font-semibold text-slate-200 mb-3">Location</h3>
-                  <div className="bg-[#131C2D] rounded-2xl border border-slate-800/60 p-3 flex gap-4">
-                    <div className="w-[140px] h-28 bg-[#0E1524] rounded-xl border border-slate-700/50 overflow-hidden relative">
-                       <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '12px 12px' }}></div>
-                       <div className="absolute top-4 left-4 w-2 h-2 bg-blue-500 rounded-full"></div>
-                       <div className="absolute bottom-6 right-8">
-                         <Icon name="map-pin" className="w-5 h-5 text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)] animate-pulse" />
-                       </div>
-                       <span className="absolute bottom-2 left-2 text-[8px] font-bold text-blue-500/40">Lobby</span>
-                    </div>
-                    
-                    <div className="flex-1 flex flex-col justify-between py-1">
-                      <div className="flex items-start gap-2">
-                        <Icon name="map-pin" className="w-4 h-4 text-blue-400 mt-0.5" />
-                        <div>
-                          <div className="text-[10px] text-slate-400">Current Position</div>
-                          <div className="text-sm font-medium text-white">Hotel Lobby (1F)</div>
-                        </div>
+                <!-- Power and Payload Double Gauge Column layout -->
+                <div class="grid grid-cols-2 gap-4 shrink-0 mt-4">
+                  <div class="bg-[#121929] rounded-2xl p-4 border border-gray-800/60 flex flex-col justify-between">
+                    <h3 class="text-[10px] font-semibold text-gray-400 uppercase mb-3">Power Subsystem</h3>
+                    <div class="space-y-2 text-[10px]">
+                      <div class="flex justify-between border-b border-gray-800/50 pb-1">
+                        <span class="text-gray-500">Voltage</span>
+                        <span id="details-voltage" class="text-gray-200 font-semibold">-</span>
                       </div>
-                      <div className="flex items-start gap-2">
-                        <Icon name="compass" className="w-4 h-4 text-slate-400 mt-0.5" />
-                        <div>
-                          <div className="text-[10px] text-slate-400">Heading</div>
-                          <div className="text-sm font-medium text-white">120° SE</div>
-                        </div>
-                      </div>
-                      <button className="w-full mt-2 py-1.5 border border-blue-500/30 bg-blue-900/20 text-blue-400 rounded-lg text-xs font-medium flex items-center justify-center gap-1">
-                        <Icon name="map" className="w-3.5 h-3.5" /> View Live Map
-                      </button>
-                    </div>
-                  </div>
-                </section>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <section className="bg-[#131C2D] rounded-2xl border border-slate-800/60 p-3.5 flex flex-col justify-between">
-                    <h3 className="text-sm font-semibold text-slate-200 mb-3">Battery & Power</h3>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="relative w-16 h-16 flex items-center justify-center">
-                        <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                          <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1C263A" strokeWidth="4" />
-                          <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#22c55e" strokeWidth="4" strokeDasharray="86, 100" />
-                        </svg>
-                        <div className="absolute text-center">
-                          <div className="text-lg font-bold text-white leading-tight">86<span className="text-[10px]">%</span></div>
-                        </div>
-                      </div>
-                      <div className="flex-1 space-y-1.5">
-                        <div className="flex justify-between items-center text-[10px]"><span className="text-slate-400">Voltage</span><span className="text-white font-medium">24.6 V</span></div>
-                        <div className="flex justify-between items-center text-[10px]"><span className="text-slate-400">Temp</span><span className="text-white font-medium">31°C</span></div>
-                        <div className="flex justify-between items-center text-[10px]"><span className="text-slate-400">Health</span><span className="text-green-400 font-medium">Good</span></div>
+                      <div class="flex justify-between border-b border-gray-800/50 pb-1">
+                        <span class="text-gray-500">Core Temp</span>
+                        <span id="details-temp" class="text-gray-200 font-semibold">-</span>
                       </div>
                     </div>
-                  </section>
-
-                  <section className="bg-[#131C2D] rounded-2xl border border-slate-800/60 p-3.5 flex flex-col justify-between">
-                    <h3 className="text-sm font-semibold text-slate-200 mb-3">Payload Status</h3>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-14 h-14 rounded-full border-2 border-blue-500/20 flex items-center justify-center bg-blue-900/10">
-                        <Icon name="package" className="w-7 h-7 text-blue-400" />
-                      </div>
-                      <div className="flex-1 space-y-1.5">
-                        <div><div className="text-[9px] text-slate-400">Load</div><div className="text-xs font-medium text-white">5.2 kg</div></div>
-                        <div><div className="text-[9px] text-slate-400">Capacity</div><div className="text-xs font-medium text-white">20 kg</div></div>
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              </main>
-            </div>
-          );
-
-          return (
-            <div className="min-h-screen bg-[#0A0F1A] text-slate-200 font-sans">
-              {currentView === 'dashboard' ? renderDashboard() : renderRobotDetails()}
-
-              <nav className="fixed bottom-0 left-0 right-0 bg-[#0A0F1A]/90 backdrop-blur-md border-t border-slate-800/80 px-2 py-2 pb-safe z-50">
-                <div className="max-w-md mx-auto flex justify-around items-center">
-                  <button onClick={() => setCurrentView('dashboard')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors rounded-xl ${currentView === 'dashboard' ? 'text-blue-500 bg-blue-900/20' : 'text-slate-400'}`}>
-                    <Icon name="home" className="w-6 h-6 mb-1" />
-                    <span className="text-[10px] font-medium">Dashboard</span>
-                  </button>
-                  <button onClick={() => setCurrentView('robotDetails')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors rounded-xl ${currentView === 'robotDetails' ? 'text-blue-500 bg-blue-900/20' : 'text-slate-400'}`}>
-                    <Icon name="activity" className="w-6 h-6 mb-1" />
-                    <span className="text-[10px] font-medium">Robots</span>
-                  </button>
-                  <div className="relative -top-5">
-                    <button className="w-14 h-14 bg-blue-600 rounded-full flex flex-col items-center justify-center text-white shadow-[0_4px_16px_rgba(37,99,235,0.4)] border-4 border-[#0A0F1A]">
-                      <Icon name="plus" className="w-6 h-6" />
+                    <button onclick="showToast('Re-balancing battery cell channels...', 'success')" class="w-full mt-3 py-1.5 bg-[#161f30] border border-blue-500/20 text-blue-400 text-[10px] font-medium rounded-lg">
+                      Balance Cells
                     </button>
-                    <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-medium text-slate-300 whitespace-nowrap">Task</span>
                   </div>
-                  <button className="flex flex-col items-center p-2 text-slate-400 min-w-[64px]">
-                    <Icon name="list" className="w-6 h-6 mb-1" />
-                    <span className="text-[10px] font-medium mt-1">Tasks</span>
-                  </button>
-                  <button className="flex flex-col items-center p-2 text-slate-400 min-w-[64px]">
-                    <Icon name="more-horizontal" className="w-6 h-6 mb-1" />
-                    <span className="text-[10px] font-medium">More</span>
-                  </button>
+
+                  <div class="bg-[#121929] rounded-2xl p-4 border border-gray-800/60 flex flex-col justify-between">
+                    <h3 class="text-[10px] font-semibold text-gray-400 uppercase mb-3">Payload Status</h3>
+                    <div class="space-y-2 text-[10px]">
+                      <div class="flex justify-between border-b border-gray-800/50 pb-1">
+                        <span class="text-gray-500">Load</span>
+                        <span id="details-payload" class="text-gray-200 font-semibold">-</span>
+                      </div>
+                      <div class="flex justify-between border-b border-gray-800/50 pb-1">
+                        <span class="text-gray-500">Limit Max</span>
+                        <span class="text-gray-200 font-semibold">20.0 kg</span>
+                      </div>
+                    </div>
+                    <button onclick="showToast('Zero-out scale calibrators active', 'success')" class="w-full mt-3 py-1.5 bg-[#161f30] border border-blue-500/20 text-blue-400 text-[10px] font-medium rounded-lg">
+                      Calibrate Scale
+                    </button>
+                  </div>
                 </div>
-              </nav>
+
+              ` : state.activeTelemetryTab === 'Hardware' ? `
+                
+                <!-- Hardware Inspector List -->
+                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-800/60 shrink-0">
+                  <h3 class="text-xs font-semibold text-gray-200 mb-3">System Module Bus Status</h3>
+                  <div class="space-y-2">
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                      <span class="text-gray-300 flex items-center gap-1.5"><i data-lucide="cpu" class="w-4 h-4 text-green-500"></i> Main ECU Processor</span>
+                      <span class="text-green-500 font-semibold">ONLINE</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                      <span class="text-gray-300 flex items-center gap-1.5"><i data-lucide="zap" class="w-4 h-4 text-green-500"></i> Motor Controllers</span>
+                      <span class="text-green-500 font-semibold">ONLINE</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                      <span class="text-gray-300 flex items-center gap-1.5"><i data-lucide="shield" class="w-4 h-4 text-green-500"></i> Safety Watchdog</span>
+                      <span class="text-green-400 font-semibold">SECURED</span>
+                    </div>
+                  </div>
+                </div>
+
+              ` : `
+                
+                <!-- Sensors inspector telemetry logs -->
+                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-800/60 shrink-0">
+                  <h3 class="text-xs font-semibold text-gray-200 mb-3">LiDAR / Optical Arrays</h3>
+                  <div class="space-y-2">
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                      <span class="text-gray-300">Front LiDAR scan rate</span>
+                      <span class="text-gray-200 font-mono">20 Hz (100%)</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                      <span class="text-gray-300">Depth cameras feed</span>
+                      <span class="text-green-500 font-semibold">HEALTHY</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                      <span class="text-gray-300">Ultrasonic bumpers</span>
+                      <span class="text-gray-200">Active (4/4)</span>
+                    </div>
+                  </div>
+                </div>
+
+              `}
             </div>
-          );
+
+            <!-- Operational control buttons -->
+            <div class="bg-[#121929] rounded-2xl p-4 border border-gray-800/60 shrink-0 mt-4">
+              <h3 class="text-xs font-semibold text-gray-200 mb-3">Unit Maintenance Action</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <button onclick="showToast('Remote reboot command sequence sent to unit.', 'warning')" class="py-2.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 rounded-xl text-xs font-semibold border border-amber-500/20">
+                  Reboot Systems
+                </button>
+                <button onclick="showToast('EMERGENCY HALT COMMAND SENT', 'warning')" class="py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-semibold">
+                  EMERGENCY STOP
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+      
+      lucide.createIcons();
+      updateRobotDetailsDynamic();
+    }
+
+    // Dynamic precise values inside inspector
+    function updateRobotDetailsDynamic() {
+      if (state.currentView !== 'robot_details') return;
+
+      const highlightedRobot = state.robots[state.highlightIdx];
+      const isCharging = highlightedRobot.status === 'charging';
+
+      const detailsAvatar = document.getElementById('details-avatar');
+      if (detailsAvatar) {
+        detailsAvatar.innerHTML = getRobotAvatarHTML(highlightedRobot.status, 'w-full h-full');
+      }
+
+      const detailsId = document.getElementById('details-id');
+      if (detailsId) detailsId.textContent = highlightedRobot.id;
+
+      const detailsStatusPill = document.getElementById('details-status-pill');
+      if (detailsStatusPill) {
+        detailsStatusPill.className = `flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] border ${
+          highlightedRobot.status === 'online' ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+          : highlightedRobot.status === 'busy' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+          : highlightedRobot.status === 'charging' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' 
+          : 'bg-red-500/10 text-red-400 border-red-500/20'
+        }`;
+        detailsStatusPill.innerHTML = `
+          <div class="w-1.5 h-1.5 rounded-full ${highlightedRobot.status === 'online' ? 'bg-green-500' : highlightedRobot.status === 'busy' ? 'bg-blue-500' : highlightedRobot.status === 'charging' ? 'bg-yellow-500' : 'bg-red-500'}"></div>
+          <span class="capitalize font-semibold text-[8px]">${highlightedRobot.status}</span>
+        `;
+      }
+
+      const detailsLocation = document.getElementById('details-location');
+      if (detailsLocation) detailsLocation.textContent = highlightedRobot.location;
+
+      const detailsUptime = document.getElementById('details-uptime');
+      if (detailsUptime) detailsUptime.textContent = formatUptime(highlightedRobot.uptimeMinutes);
+
+      const detailsBatteryText = document.getElementById('details-battery-text');
+      if (detailsBatteryText) detailsBatteryText.textContent = `${Math.round(highlightedRobot.battery)}%`;
+
+      const detailsBatteryIconZap = document.getElementById('details-battery-icon-zap');
+      if (detailsBatteryIconZap) {
+        detailsBatteryIconZap.style.display = isCharging ? 'block' : 'none';
+      }
+
+      if (state.activeTelemetryTab === 'Overview') {
+        const detailsHeading = document.getElementById('details-heading');
+        if (detailsHeading) detailsHeading.textContent = `${Math.round(highlightedRobot.heading)}° SE`;
+
+        const detailsCoords = document.getElementById('details-coords');
+        if (detailsCoords) {
+          detailsCoords.innerHTML = `
+            <div>X: ${highlightedRobot.coords.x.toFixed(3)} m</div>
+            <div>Y: ${highlightedRobot.coords.y.toFixed(3)} m</div>
+          `;
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+        const detailsVoltage = document.getElementById('details-voltage');
+        if (detailsVoltage) detailsVoltage.textContent = `${highlightedRobot.voltage.toFixed(1)} V`;
+
+        const detailsTemp = document.getElementById('details-temp');
+        if (detailsTemp) detailsTemp.textContent = `${highlightedRobot.temp.toFixed(1)}°C`;
+
+        const detailsPayload = document.getElementById('details-payload');
+        if (detailsPayload) detailsPayload.textContent = `${highlightedRobot.payload.toFixed(1)} kg`;
+      }
+    }
+
+    function renderTasks(container) {
+      container.innerHTML = `
+        <div class="flex-1 px-4 flex flex-col gap-4 overflow-y-auto hide-scrollbar animate-slide-in pb-[90px]">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-200 mt-2">Active Task Logs</h2>
+          
+          <div class="bg-[#121929] rounded-2xl p-4 border border-gray-800/60 space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-800/50 pb-3">
+              <div>
+                <h3 class="text-xs font-bold text-white">Route T-892</h3>
+                <p class="text-[10px] text-gray-400">Target Zone: Room 104 Delivery</p>
+              </div>
+              <span class="text-[9px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded">In Progress</span>
+            </div>
+            <div class="flex justify-between items-center border-b border-gray-800/50 pb-3">
+              <div>
+                <h3 class="text-xs font-bold text-white">Route T-881</h3>
+                <p class="text-[10px] text-gray-400">Target Zone: Dining Hall Sanitizing</p>
+              </div>
+              <span class="text-[9px] font-bold text-green-500 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded">Completed</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-xs font-bold text-white">Route T-874</h3>
+                <p class="text-[10px] text-gray-400">Target Zone: Elevator lobby spill pickup</p>
+              </div>
+              <span class="text-[9px] font-bold text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded">Failed</span>
+            </div>
+          </div>
+
+          <button onclick="openDispatchModal()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 transition-colors text-white text-xs font-semibold rounded-xl shadow-[0_4px_14px_rgba(37,99,235,0.3)]">
+            Create & Dispatch New Task Route
+          </button>
+        </div>
+      `;
+    }
+
+    function renderSettings(container) {
+      container.innerHTML = `
+        <div class="flex-1 px-4 py-2 flex flex-col gap-5 overflow-y-auto hide-scrollbar animate-slide-in pb-[90px]">
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2 px-1">Account settings</h3>
+            <div class="bg-[#121929] rounded-2xl border border-gray-800/60 overflow-hidden divide-y divide-gray-800/50">
+              <div onclick="showToast('Mock profile details configured.', 'info')" class="flex items-center justify-between p-3.5 hover:bg-[#1a233a] cursor-pointer">
+                <span class="text-xs font-medium text-gray-200">Owner Profile settings</span>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
+              </div>
+              <div onclick="showToast('Notification schedules active', 'info')" class="flex items-center justify-between p-3.5 hover:bg-[#1a233a] cursor-pointer">
+                <span class="text-xs font-medium text-gray-200">Push Notifications Config</span>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2 px-1">Fleet Management settings</h3>
+            <div class="bg-[#121929] rounded-2xl border border-gray-800/60 overflow-hidden divide-y divide-gray-800/50">
+              <div onclick="showToast('Loaded geofence profiles (Read only)', 'info')" class="flex items-center justify-between p-3.5 hover:bg-[#1a233a] cursor-pointer">
+                <span class="text-xs font-medium text-gray-200">Geofences & Bounds</span>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
+              </div>
+              <div onclick="showToast('Saved schedule backups online', 'success')" class="flex items-center justify-between p-3.5 hover:bg-[#1a233a] cursor-pointer">
+                <span class="text-xs font-medium text-gray-200">System Schedules Manager</span>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="showToast('Logging out... (Simulated)', 'warning')" class="w-full flex items-center justify-center gap-2 p-3.5 bg-[#121929] hover:bg-[#1a233a] rounded-2xl border border-gray-800/60 text-red-500 font-semibold text-xs">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>Log Out System Session</span>
+          </button>
+        </div>
+      `;
+    }
+
+    // Begin standard lifecycle operations
+    window.onload = function() {
+      renderApp();
+    }
+  </script>
 </body>
 </html>
