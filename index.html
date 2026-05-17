@@ -128,11 +128,11 @@
 </head>
 <body class="h-[100dvh] w-full bg-[#070b14] sm:bg-[#000000] text-white font-sans flex justify-center overflow-hidden selection:bg-blue-500/30">
 
-  <!-- Main Mobile Container Frame (Perfect edge-to-edge adaptive screen container) -->
+  <!-- Main Mobile Container Frame (Perfect edge-to-edge adaptive screen container without outer borders) -->
   <div class="w-full max-w-[480px] h-full bg-[#070b14] relative flex flex-col shadow-2xl overflow-hidden">
     
-    <!-- App Header -->
-    <header id="app-header" class="px-5 pt-12 pb-4 flex items-center justify-between sticky top-0 z-45 bg-[#070b14]/90 backdrop-blur-md shrink-0 border-b border-gray-900/20">
+    <!-- App Header (Only shown for dashboard & settings views) -->
+    <header id="app-header" class="px-5 pt-12 pb-4 flex items-center justify-between sticky top-0 z-45 bg-[#070b14]/90 backdrop-blur-md shrink-0 border-b border-slate-900/30">
       <!-- Generated Dynamically -->
     </header>
 
@@ -141,8 +141,8 @@
       <!-- Views are rendered inside this section dynamically -->
     </main>
 
-    <!-- Bottom Navigation Bar (No wrap guaranteed on small phones) -->
-    <nav class="sticky bottom-0 w-full bg-[#070b14]/95 backdrop-blur-lg border-t border-gray-800/80 px-1 pb-safe pt-2 flex justify-between items-end z-40">
+    <!-- Bottom Navigation Bar (Guaranteed dark border-t and no-wrap text) -->
+    <nav class="sticky bottom-0 w-full bg-[#070b14]/95 backdrop-blur-lg border-t border-slate-800/80 px-1 pb-safe pt-2 flex justify-between items-end z-40">
       <button onclick="navigate('dashboard')" id="nav-dashboard" class="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl mb-1 mx-0.5 transition-all-300">
         <i data-lucide="home" class="w-5 h-5"></i>
         <span class="text-[9px] font-medium whitespace-nowrap">Dashboard</span>
@@ -176,7 +176,7 @@
 
     <!-- Dispatch Task Overlay Modal -->
     <div id="dispatch-modal" class="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end justify-center">
-      <div class="w-full bg-[#0d1321] rounded-t-3xl border-t border-gray-800 p-6 space-y-5 animate-slide-in max-h-[85vh] overflow-y-auto hide-scrollbar">
+      <div class="w-full bg-[#0d1321] rounded-t-3xl border-t border-slate-800 p-6 space-y-5 animate-slide-in max-h-[85vh] overflow-y-auto hide-scrollbar">
         <div class="flex justify-between items-center">
           <h2 class="text-lg font-bold text-white flex items-center gap-2">
             <i data-lucide="zap" class="w-5 h-5 text-blue-500"></i> Dispatch Nexbot Task
@@ -189,7 +189,7 @@
         <form id="dispatch-form" onsubmit="handleDispatchTask(event)" class="space-y-4 text-sm">
           <div>
             <label class="block text-xs text-gray-400 mb-1.5 font-medium">Select Robot Unit</label>
-            <select id="dispatch-robot-select" class="w-full bg-[#161f30] border border-gray-800 text-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="dispatch-robot-select" class="w-full bg-[#161f30] border border-slate-800 text-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <!-- Rendered via JS -->
             </select>
           </div>
@@ -197,11 +197,11 @@
           <div>
             <label class="block text-xs text-gray-400 mb-1.5 font-medium">Task Action</label>
             <div class="grid grid-cols-2 gap-2">
-              <label class="flex items-center gap-2 bg-[#161f30] border border-gray-800 rounded-xl p-3 cursor-pointer hover:bg-blue-950/20 hover:border-blue-500/50 transition-all">
+              <label class="flex items-center gap-2 bg-[#161f30] border border-slate-800 rounded-xl p-3 cursor-pointer hover:bg-blue-950/20 hover:border-blue-500/50 transition-all">
                 <input type="radio" name="dispatch-action" value="Delivering" checked class="accent-blue-500">
                 <span class="text-xs text-gray-200 font-medium">Deliver Goods</span>
               </label>
-              <label class="flex items-center gap-2 bg-[#161f30] border border-gray-800 rounded-xl p-3 cursor-pointer hover:bg-blue-950/20 hover:border-blue-500/50 transition-all">
+              <label class="flex items-center gap-2 bg-[#161f30] border border-slate-800 rounded-xl p-3 cursor-pointer hover:bg-blue-950/20 hover:border-blue-500/50 transition-all">
                 <input type="radio" name="dispatch-action" value="Cleaning" class="accent-blue-500">
                 <span class="text-xs text-gray-200 font-medium">Sanitize / Clean</span>
               </label>
@@ -210,7 +210,7 @@
           
           <div>
             <label class="block text-xs text-gray-400 mb-1.5 font-medium">Destination Zone</label>
-            <select id="dispatch-zone" class="w-full bg-[#161f30] border border-gray-800 text-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="dispatch-zone" class="w-full bg-[#161f30] border border-slate-800 text-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="1F - Lobby">1F - Lobby</option>
               <option value="1F - Restaurant">1F - Restaurant</option>
               <option value="1F - Ballroom">1F - Ballroom</option>
@@ -221,7 +221,7 @@
 
           <div>
             <label class="block text-xs text-gray-400 mb-1.5 font-medium">Payload Weight (kg)</label>
-            <input id="dispatch-payload" type="number" min="0" max="20" value="3" class="w-full bg-[#161f30] border border-gray-800 text-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input id="dispatch-payload" type="number" min="0" max="20" value="3" class="w-full bg-[#161f30] border border-slate-800 text-white rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
           </div>
           
           <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-blue-500/20">
@@ -245,6 +245,8 @@
       history: ['dashboard'],
       highlightIdx: 0,
       activeRobotTab: 'all',
+      activeTaskTab: 'all',
+      selectedTaskId: 'T-20250528-016',
       searchQuery: '',
       metrics: { total: 24, online: 18, active: 16, completed: 128, battery: 78, alerts: 8 },
       tasks: { inProgress: 16, pending: 12, completed: 128, failed: 4, cancelled: 2 },
@@ -256,6 +258,48 @@
         { id: 'R1-01_b', status: 'online', x: 20, y: 37, battery: 92, location: '1F - Restaurant', activity: 'Standby', heading: 210, coords: {x: 4.1, y: 9.3}, voltage: 24.8, temp: 29, payload: 0, uptimeMinutes: 4100 },
         { id: 'R1-02', status: 'busy', x: 38, y: 36, battery: 55, location: '1F - Elevator Lobby', activity: 'Navigating', heading: 90, coords: {x: 10.2, y: 12.1}, voltage: 23.9, temp: 33, payload: 4.0, uptimeMinutes: 2200 },
         { id: 'R2-02', status: 'busy', x: 66, y: 35, battery: 71, location: '1F - Ballroom', activity: 'Delivering', heading: 160, coords: {x: 18.5, y: 14.2}, voltage: 24.1, temp: 32, payload: 8.5, uptimeMinutes: 1900 },
+      ],
+      taskItems: [
+        {
+          id: 'T-20250528-016',
+          type: 'Room Service',
+          from: 'Kitchen (1F)',
+          to: 'Room 1205 (12F)',
+          status: 'progress',
+          robot: 'R2-03',
+          eta: '2 min',
+          time: '02:45 PM'
+        },
+        {
+          id: 'T-20250528-015',
+          type: 'Linen Delivery',
+          from: 'Laundry Room (B1)',
+          to: 'Room 602 (6F)',
+          status: 'completed',
+          robot: 'R1-04',
+          eta: null,
+          time: '01:15 PM'
+        },
+        {
+          id: 'T-20250528-012',
+          type: 'Tray Return Request',
+          from: 'Room 412 (4F)',
+          to: 'Kitchen (1F)',
+          status: 'failed',
+          robot: 'R1-05',
+          eta: null,
+          time: '11:30 AM'
+        },
+        {
+          id: 'T-20250528-010',
+          type: 'Disinfection Patrol',
+          from: 'Lobby (1F)',
+          to: 'Conference Center (2F)',
+          status: 'cancelled',
+          robot: 'R1-02',
+          eta: null,
+          time: '09:15 AM'
+        }
       ],
       activeTelemetryTab: 'Overview'
     };
@@ -369,6 +413,19 @@
       }
     }
 
+    function selectTask(taskId) {
+      state.selectedTaskId = taskId;
+      navigate('task_details');
+    }
+
+    function goToRobotDetailsFromTask(robotId) {
+      const index = state.robots.findIndex(r => r.id === robotId);
+      if (index !== -1) {
+        state.highlightIdx = index;
+        navigate('robot_details');
+      }
+    }
+
     function setRobotTab(tab) {
       state.activeRobotTab = tab;
       const listContainer = document.getElementById('robots-list-container');
@@ -388,6 +445,11 @@
       } else {
         renderApp();
       }
+    }
+
+    function setTaskTab(tab) {
+      state.activeTaskTab = tab;
+      renderApp();
     }
 
     function setTelemetryTab(tab) {
@@ -430,6 +492,18 @@
         state.tasks.inProgress += 1;
         state.metrics.active += 1;
         
+        // Add new active task dynamically to high fidelity tasks items
+        state.taskItems.unshift({
+          id: `T-20260518-0${state.taskItems.length + 10}`,
+          type: action === 'Delivering' ? 'Room Service' : 'Disinfection Patrol',
+          from: 'Kitchen (1F)',
+          to: destination,
+          status: 'progress',
+          robot: robotId,
+          eta: '5 min',
+          time: '04:54 AM'
+        });
+
         showToast(`Dispatched ${robotId} to ${destination} for ${action}!`, 'success');
         closeDispatchModal();
         
@@ -507,6 +581,8 @@
         renderSettings(mainContent);
       } else if (state.currentView === 'tasks') {
         renderTasks(mainContent);
+      } else if (state.currentView === 'task_details') {
+        renderTaskDetails(mainContent);
       }
       
       lucide.createIcons();
@@ -514,7 +590,7 @@
 
     function renderHeader() {
       const header = document.getElementById('app-header');
-      if (state.currentView === 'dashboard' || state.currentView === 'settings' || state.currentView === 'tasks') {
+      if (state.currentView === 'dashboard' || state.currentView === 'settings') {
         header.classList.remove('hidden');
         header.innerHTML = `
           <div class="flex items-center gap-3">
@@ -548,7 +624,7 @@
       navs.forEach(nav => {
         const btn = document.getElementById(`nav-${nav}`);
         if (btn) {
-          if (state.currentView === nav) {
+          if (state.currentView === nav || (nav === 'tasks' && state.currentView === 'task_details')) {
             btn.className = "flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl mb-1 mx-0.5 text-blue-500 bg-blue-900/20 transition-all-300";
           } else {
             btn.className = "flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl mb-1 mx-0.5 text-gray-500 hover:text-gray-300 transition-all-300";
@@ -563,7 +639,7 @@
           
           <!-- Location & Systems Header -->
           <div class="flex items-center justify-between mt-2 shrink-0">
-            <button class="flex items-center gap-1.5 bg-[#121929] hover:bg-[#1a233a] transition-colors px-3.5 py-2 rounded-xl border border-gray-850">
+            <button class="flex items-center gap-1.5 bg-[#121929] hover:bg-[#1a233a] transition-colors px-3.5 py-2 rounded-xl border border-[#1b253b]">
               <i data-lucide="hotel" class="w-3.5 h-3.5 text-gray-400"></i>
               <span class="text-xs font-semibold text-gray-200">Grand Hotel Downtown</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400"></i>
@@ -574,10 +650,10 @@
             </div>
           </div>
 
-          <!-- Target Metrics row (5 Cards horizontally scrollable, customized with beautiful dark borders) -->
+          <!-- Target Metrics row (5 Cards - Border color strictly controlled to prevent browser white fallback) -->
           <div class="flex overflow-x-auto gap-3 pb-2 -mx-4 px-4 snap-x hide-scrollbar shrink-0">
             <!-- Card 1: Total Robots -->
-            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-gray-850 snap-start shrink-0 flex flex-col justify-between">
+            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-[#1b253b] snap-start shrink-0 flex flex-col justify-between">
               <div>
                 <p class="text-[10px] text-gray-400 font-medium mb-1">Total Robots</p>
                 <div class="flex items-end justify-between">
@@ -594,7 +670,7 @@
             </div>
             
             <!-- Card 2: Active Tasks -->
-            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-gray-850 snap-start shrink-0 flex flex-col justify-between">
+            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-[#1b253b] snap-start shrink-0 flex flex-col justify-between">
               <div>
                 <p class="text-[10px] text-gray-400 font-medium mb-1">Active Tasks</p>
                 <div class="flex items-end justify-between">
@@ -611,7 +687,7 @@
             </div>
 
             <!-- Card 3: Completed Today -->
-            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-gray-850 snap-start shrink-0 flex flex-col justify-between">
+            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-[#1b253b] snap-start shrink-0 flex flex-col justify-between">
               <div>
                 <p class="text-[10px] text-gray-400 font-medium mb-1">Completed Today</p>
                 <div class="flex items-end justify-between">
@@ -628,7 +704,7 @@
             </div>
 
             <!-- Card 4: Battery Average -->
-            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-gray-850 snap-start shrink-0 flex flex-col justify-between">
+            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-[#1b253b] snap-start shrink-0 flex flex-col justify-between">
               <div>
                 <p class="text-[10px] text-gray-400 font-medium mb-1">Battery Average</p>
                 <div class="flex items-end justify-between">
@@ -644,7 +720,7 @@
             </div>
 
             <!-- Card 5: Alerts -->
-            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-gray-850 snap-start shrink-0 flex flex-col justify-between">
+            <div class="min-w-[130px] bg-[#121929] rounded-2xl p-4 border border-[#1b253b] snap-start shrink-0 flex flex-col justify-between">
               <div>
                 <p class="text-[10px] text-gray-400 font-medium mb-1">Alerts</p>
                 <div class="flex items-end justify-between">
@@ -662,7 +738,7 @@
           </div>
 
           <!-- Floorplan map background with matching gray-850 dark outline -->
-          <div class="bg-[#121929] rounded-2xl border border-gray-850 overflow-hidden shrink-0">
+          <div class="bg-[#121929] rounded-2xl border border-[#1b253b] overflow-hidden shrink-0">
             <div class="flex items-center justify-between p-4 pb-2">
               <button class="flex items-center gap-2">
                 <h2 class="text-xs font-semibold text-gray-200 tracking-wide">Live Map <span class="text-gray-500">— 1st Floor</span></h2>
@@ -741,7 +817,7 @@
           </div>
 
           <!-- Highlight Robot Showcase Component (Highly Responsive Structure) -->
-          <div class="bg-[#121929] rounded-2xl border border-gray-850 p-4 mobile-card-padding shrink-0">
+          <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 mobile-card-padding shrink-0">
             <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
               Robot Highlight
             </h2>
@@ -790,7 +866,7 @@
           <!-- Charts Sections with customized fluid layouts to prevent text wrapping -->
           <div class="grid grid-cols-2 gap-3 mobile-gap-reduction shrink-0">
             <!-- Tasks Overview Card -->
-            <div class="bg-[#121929] rounded-2xl border border-gray-850 p-3 mobile-card-padding relative flex flex-col justify-between">
+            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-3 mobile-card-padding relative flex flex-col justify-between">
               <h3 class="text-xs font-semibold text-gray-200 tracking-wide mobile-title-shrink">Tasks Overview</h3>
               <div class="flex items-center gap-2 mobile-gap-reduction my-2">
                 <div class="relative w-[50px] h-[50px] xs:w-[64px] xs:h-[64px] sm:w-[70px] sm:h-[70px] shrink-0">
@@ -832,7 +908,7 @@
             </div>
 
             <!-- Battery Health Trend Chart -->
-            <div class="bg-[#121929] rounded-2xl border border-gray-850 p-3 mobile-card-padding relative flex flex-col justify-between">
+            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-3 mobile-card-padding relative flex flex-col justify-between">
               <div class="flex justify-between items-start gap-1">
                  <h3 class="text-xs font-semibold text-gray-200 mobile-title-shrink">Battery Overview</h3>
                  <span id="battery-trend-avg" class="text-[8px] xs:text-[10px] text-green-400 font-bold shrink-0">78% Avg</span>
@@ -864,8 +940,8 @@
               <button onclick="showToast('Loading full alert history...', 'info')" class="text-xs text-blue-500 hover:text-blue-400">View All</button>
             </div>
             
-            <div class="bg-[#121929] rounded-2xl border border-gray-850 p-4 mobile-card-padding space-y-3.5">
-              <div class="flex items-center gap-3 mobile-gap-reduction pb-3 border-b border-gray-800/50">
+            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 mobile-card-padding space-y-3.5">
+              <div class="flex items-center gap-3 mobile-gap-reduction pb-3 border-b border-slate-800/40">
                 <div class="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 shrink-0">
                   <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500"></i>
                 </div>
@@ -875,7 +951,7 @@
                 </div>
               </div>
 
-              <div class="flex items-center gap-3 mobile-gap-reduction pb-3 border-b border-gray-800/50">
+              <div class="flex items-center gap-3 mobile-gap-reduction pb-3 border-b border-slate-800/40">
                 <div class="w-8 h-8 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 shrink-0">
                   <i data-lucide="ban" class="w-4 h-4 text-yellow-500"></i>
                 </div>
@@ -885,7 +961,7 @@
                 </div>
               </div>
 
-              <div class="flex items-center gap-3 mobile-gap-reduction pb-3 border-b border-gray-800/50">
+              <div class="flex items-center gap-3 mobile-gap-reduction pb-3 border-b border-slate-800/40">
                 <div class="w-8 h-8 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 shrink-0">
                   <i data-lucide="droplet" class="w-4 h-4 text-yellow-500"></i>
                 </div>
@@ -1019,7 +1095,7 @@
             </div>
           </header>
 
-          <div class="flex justify-between items-center px-4 border-b border-gray-800/80 mb-4 shrink-0 overflow-x-auto hide-scrollbar">
+          <div class="flex justify-between items-center px-4 border-b border-slate-800/80 mb-4 shrink-0 overflow-x-auto hide-scrollbar">
             ${['All', 'Online', 'Busy', 'Offline', 'Charging'].map(tab => {
               const tabLower = tab.toLowerCase();
               const isActive = state.activeRobotTab === tabLower;
@@ -1035,7 +1111,7 @@
 
           <div id="robots-list-container" class="flex-1 px-4 overflow-y-auto flex flex-col gap-3 pb-[90px] hide-scrollbar"></div>
 
-          <div class="absolute bottom-[72px] w-full px-4 py-3 border-t border-gray-800/80 bg-[#0a0f1a] flex justify-between items-center text-[10px] z-20">
+          <div class="absolute bottom-[72px] w-full px-4 py-3 border-t border-slate-800/80 bg-[#0a0f1a] flex justify-between items-center text-[10px] z-20">
             <div class="flex items-center gap-1.5 text-gray-400">
               <i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i>
               <span>Auto Sync active</span>
@@ -1084,7 +1160,7 @@
         return `
           <div 
             onclick="changeHighlight(${masterIndex}); navigate('robot_details');"
-            class="bg-[#121929] rounded-2xl border border-gray-800/60 p-3 flex items-stretch gap-4 cursor-pointer hover:bg-[#1a233a] transition-colors shrink-0 animate-slide-in"
+            class="bg-[#121929] rounded-2xl border border-[#1b253b] p-3 flex items-stretch gap-4 cursor-pointer hover:bg-[#1a233a] transition-colors shrink-0 animate-slide-in"
           >
             <div class="w-[60px] shrink-0 h-[78px]">${getPremiumRobotSVG(robot.status)}</div>
             
@@ -1151,7 +1227,7 @@
           <div class="flex-1 overflow-y-auto px-4 hide-scrollbar flex flex-col gap-4 pb-[90px] pt-2">
             
             <!-- Unit Status Header Summary Card -->
-            <div class="flex items-start gap-4 bg-[#121929] rounded-2xl p-4 border border-gray-800/60 mobile-card-padding shrink-0">
+            <div class="flex items-start gap-4 bg-[#121929] rounded-2xl p-4 border border-[#1b253b] mobile-card-padding shrink-0">
               <div id="details-avatar" class="w-[72px] h-[92px] mobile-avatar-shrink shrink-0"></div>
               
               <div class="flex-1 flex justify-between h-[92px]">
@@ -1206,7 +1282,7 @@
             </div>
 
             <!-- Full 5 tab filters perfectly matching image_50656c.jpg -->
-            <div class="flex gap-4 border-b border-gray-800/80 -mx-4 px-4 overflow-x-auto hide-scrollbar shrink-0">
+            <div class="flex gap-4 border-b border-slate-800/80 -mx-4 px-4 overflow-x-auto hide-scrollbar shrink-0">
               ${[
                 { name: 'Overview', icon: 'layers' },
                 { name: 'Hardware', icon: 'cpu' },
@@ -1228,11 +1304,11 @@
             <div id="telemetry-tab-content">
               ${state.activeTelemetryTab === 'Overview' ? `
                 
-                <!-- Location Module -->
-                <div class="bg-[#121929] rounded-2xl p-4 mobile-card-padding shrink-0">
+                <!-- Location Module (Using secure specific dark outline border-[#1b253b]) -->
+                <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0">
                   <h3 class="text-xs font-semibold text-gray-200 mb-3">Location</h3>
                   <div class="flex gap-4 mobile-gap-reduction items-stretch">
-                    <div class="flex-[3] bg-[#0a101d] rounded-xl border border-gray-800/80 relative overflow-hidden min-h-[140px]">
+                    <div class="flex-[3] bg-[#0a101d] rounded-xl border border-slate-800/80 relative overflow-hidden min-h-[140px]">
                       <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="absolute inset-0 opacity-40">
                         <g stroke="#1e293b" stroke-width="1.5" fill="none">
                           <rect x="5%" y="10%" width="30%" height="35%" />
@@ -1263,7 +1339,7 @@
                     
                     <div class="flex-[2] flex flex-col justify-between py-1 min-w-0">
                       <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-8 h-8 rounded-[10px] bg-[#1a233a] flex items-center justify-center shrink-0 border border-gray-750">
+                        <div class="w-8 h-8 rounded-[10px] bg-[#1a233a] flex items-center justify-center shrink-0 border border-slate-800/80">
                           <i data-lucide="map-pin" class="w-4 h-4 text-blue-500"></i>
                         </div>
                         <div class="flex flex-col justify-center min-w-0">
@@ -1273,7 +1349,7 @@
                       </div>
                       
                       <div class="flex items-center gap-2.5 mt-3 min-w-0">
-                        <div class="w-8 h-8 rounded-[10px] bg-[#1a233a] flex items-center justify-center shrink-0 border border-gray-750">
+                        <div class="w-8 h-8 rounded-[10px] bg-[#1a233a] flex items-center justify-center shrink-0 border border-slate-800/80">
                           <i data-lucide="compass" class="w-4 h-4 text-gray-400"></i>
                         </div>
                         <div class="flex flex-col justify-center min-w-0">
@@ -1297,10 +1373,10 @@
                   </div>
                 </div>
 
-                <!-- Battery & Power and Payload Double columns layout -->
+                <!-- Battery & Power and Payload Double columns layout (Using border-[#1b253b]) -->
                 <div class="grid grid-cols-2 gap-3 mobile-gap-reduction shrink-0 mt-4">
-                  <!-- Left side: Battery & Power (Adaptive layouts implemented) -->
-                  <div class="bg-[#121929] rounded-2xl p-3 border border-gray-850 flex flex-col justify-between mobile-card-padding">
+                  <!-- Left side: Battery & Power -->
+                  <div class="bg-[#121929] rounded-2xl p-3 border border-[#1b253b] flex flex-col justify-between mobile-card-padding">
                     <h3 class="text-xs font-semibold text-gray-200 mb-3 mobile-title-shrink">Battery & Power</h3>
                     <div class="flex flex-col xs:flex-row items-center gap-3 mobile-gap-reduction mb-4">
                       <div class="relative w-[52px] h-[52px] xs:w-[60px] xs:h-[60px] mobile-circle-shrink shrink-0">
@@ -1340,7 +1416,7 @@
                   </div>
 
                   <!-- Right side: Payload status -->
-                  <div class="bg-[#121929] rounded-2xl p-3 border border-gray-850 flex flex-col justify-between mobile-card-padding">
+                  <div class="bg-[#121929] rounded-2xl p-3 border border-[#1b253b] flex flex-col justify-between mobile-card-padding">
                     <h3 class="text-xs font-semibold text-gray-200 mb-3 mobile-title-shrink">Payload Status</h3>
                     <div class="flex flex-col xs:flex-row items-center gap-3 mobile-gap-reduction mb-4">
                       <div class="relative w-[52px] h-[52px] xs:w-[60px] xs:h-[60px] mobile-circle-shrink rounded-full border-4 border-[#1e293b] flex items-center justify-center shrink-0">
@@ -1370,45 +1446,45 @@
                 </div>
 
                 <!-- Operational Status grid -->
-                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 shrink-0 mt-4 mobile-card-padding">
+                <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 mt-4 mobile-card-padding">
                   <h3 class="text-xs font-semibold text-gray-200 mb-3">Operational Status</h3>
                   <div class="grid grid-cols-2 gap-x-3 gap-y-2.5 mobile-gap-reduction">
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-slate-800/85">
                        <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
                          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500 shrink-0"></i> 
                          <span class="truncate">Navigation</span>
                        </div>
                        <span class="text-[10px] text-green-500 font-bold shrink-0">Normal</span>
                      </div>
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-slate-800/85">
                        <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
                          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500 shrink-0"></i> 
                          <span class="truncate">Payload</span>
                        </div>
                        <span class="text-[10px] text-green-500 font-bold shrink-0">Normal</span>
                      </div>
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-slate-800/85">
                        <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
                          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500 shrink-0"></i> 
                          <span class="truncate">Motors</span>
                        </div>
                        <span class="text-[10px] text-green-500 font-bold shrink-0">Normal</span>
                      </div>
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-slate-800/85">
                        <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
                          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500 shrink-0"></i> 
                          <span class="truncate">Sensors</span>
                        </div>
                        <span class="text-[10px] text-green-500 font-bold shrink-0">All Good</span>
                      </div>
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-slate-800/85">
                        <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
                          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-500 shrink-0"></i> 
                          <span class="truncate">Obstacle</span>
                        </div>
                        <span class="text-[10px] text-green-500 font-bold shrink-0">Active</span>
                      </div>
-                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/85">
+                     <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-slate-800/85">
                        <div class="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium min-w-0">
                          <i data-lucide="minus-circle" class="w-3.5 h-3.5 text-gray-600 shrink-0"></i> 
                          <span class="truncate">E-Stop</span>
@@ -1419,7 +1495,7 @@
                 </div>
 
                 <!-- Recent Alerts matching exactly -->
-                <div class="bg-[#121929] rounded-2xl border border-gray-850 p-4 mobile-card-padding shrink-0 mt-4">
+                <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 mobile-card-padding shrink-0 mt-4">
                    <div class="flex items-center justify-between mb-3">
                       <h3 class="text-xs font-semibold text-gray-200">Recent Alerts</h3>
                       <button onclick="showToast('Loading full alerts list...', 'info')" class="text-[10px] text-blue-500 hover:text-blue-400 font-bold">View All</button>
@@ -1463,14 +1539,14 @@
 
               ` : state.activeTelemetryTab === 'Hardware' ? `
                 
-                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 shrink-0 animate-slide-in">
+                <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 animate-slide-in">
                   <h3 class="text-xs font-semibold text-gray-200 mb-3">System Module Bus Status</h3>
                   <div class="space-y-2">
-                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-slate-800/80 text-xs">
                       <span class="text-gray-300 flex items-center gap-1.5"><i data-lucide="cpu" class="w-4 h-4 text-green-500"></i> Main ECU Processor</span>
                       <span class="text-green-500 font-semibold">ONLINE</span>
                     </div>
-                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-slate-800/80 text-xs">
                       <span class="text-gray-300 flex items-center gap-1.5"><i data-lucide="zap" class="w-4 h-4 text-green-500"></i> Motor Controllers</span>
                       <span class="text-green-500 font-semibold">ONLINE</span>
                     </div>
@@ -1479,10 +1555,10 @@
 
               ` : state.activeTelemetryTab === 'Software' ? `
                 
-                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 shrink-0 animate-slide-in">
+                <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 animate-slide-in">
                   <h3 class="text-xs font-semibold text-gray-200 mb-3">Software Stack Status</h3>
                   <div class="space-y-2">
-                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-slate-800/80 text-xs">
                       <span class="text-gray-300 flex items-center gap-1.5"><i data-lucide="disc" class="w-4 h-4 text-green-500"></i> Navigation OS (ROS2)</span>
                       <span class="text-green-500 font-semibold">v5.3.2-Humble</span>
                     </div>
@@ -1491,10 +1567,10 @@
 
               ` : state.activeTelemetryTab === 'Sensors' ? `
                 
-                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 shrink-0 animate-slide-in">
+                <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 animate-slide-in">
                   <h3 class="text-xs font-semibold text-gray-200 mb-3">LiDAR / Optical Arrays</h3>
                   <div class="space-y-2">
-                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-slate-800/80 text-xs">
                       <span class="text-gray-300">Front LiDAR scan rate</span>
                       <span class="text-gray-200 font-mono">20 Hz (100%)</span>
                     </div>
@@ -1503,10 +1579,10 @@
 
               ` : `
                 
-                <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 shrink-0 animate-slide-in">
+                <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 animate-slide-in">
                   <h3 class="text-xs font-semibold text-gray-200 mb-3">Maintenance Actions</h3>
                   <div class="space-y-2">
-                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-gray-800/80 text-xs">
+                    <div class="flex justify-between items-center bg-[#161f30] px-3 py-2 rounded-lg border border-slate-800/80 text-xs">
                       <span class="text-gray-300">Last Maintenance</span>
                       <span class="text-gray-400 font-mono">May 15, 2026</span>
                     </div>
@@ -1517,7 +1593,7 @@
             </div>
 
             <!-- Emergency & Unit restart controls -->
-            <div class="bg-[#121929] rounded-2xl p-4 border border-gray-850 shrink-0 mt-4">
+            <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 mt-4">
               <h3 class="text-xs font-semibold text-gray-200 mb-3">Unit Maintenance Action</h3>
               <div class="grid grid-cols-2 gap-3">
                 <button onclick="showToast('Remote reboot command sequence sent to unit.', 'warning')" class="py-2.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 rounded-xl text-xs font-semibold border border-amber-500/20">
@@ -1626,40 +1702,378 @@
       }
     }
 
+    // High fidelity tasks list page matching image_50d9a8.jpg perfectly
     function renderTasks(container) {
+      let filteredTasks = state.taskItems || [];
+      if (state.activeTaskTab !== 'all') {
+        filteredTasks = state.taskItems.filter(t => t.status === state.activeTaskTab);
+      }
+
       container.innerHTML = `
-        <div class="flex-1 px-4 flex flex-col gap-4 overflow-y-auto hide-scrollbar animate-slide-in pb-[90px]">
-          <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-200 mt-2">Active Task Logs</h2>
+        <div class="flex-1 flex flex-col bg-[#070b14] overflow-hidden animate-slide-in">
           
-          <div class="bg-[#121929] rounded-2xl p-4 border border-gray-855 space-y-4">
-            <div class="flex justify-between items-center border-b border-gray-800/50 pb-3">
-              <div>
-                <h3 class="text-xs font-bold text-white">Route T-892</h3>
-                <p class="text-[10px] text-gray-400">Target Zone: Room 104 Delivery</p>
-              </div>
-              <span class="text-[9px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded">In Progress</span>
+          <!-- Header (Matching exact screenshot on Tasks page) -->
+          <header class="px-5 pt-12 pb-4 flex items-center justify-between bg-[#070b14] shrink-0">
+            <h1 class="text-2xl font-bold text-gray-100 tracking-wide">Tasks</h1>
+            <div class="flex gap-4">
+              <button onclick="showToast('搜索功能已就绪', 'info')" class="text-gray-400 hover:text-white transition-colors">
+                <i data-lucide="search" class="w-5.5 h-5.5"></i>
+              </button>
+              <button onclick="showToast('筛选面板已加载', 'info')" class="text-gray-400 hover:text-white transition-colors">
+                <i data-lucide="sliders-horizontal" class="w-5.5 h-5.5"></i>
+              </button>
             </div>
-            <div class="flex justify-between items-center border-b border-gray-800/50 pb-3">
-              <div>
-                <h3 class="text-xs font-bold text-white">Route T-881</h3>
-                <p class="text-[10px] text-gray-400">Target Zone: Dining Hall Sanitizing</p>
+          </header>
+
+          <!-- 5 tabs selectors perfectly aligned with image_50d9a8.jpg -->
+          <div class="flex justify-between items-center px-4 border-b border-slate-800/80 mb-4 shrink-0 overflow-x-auto hide-scrollbar">
+            ${[
+              { id: 'all', label: 'All Tasks' },
+              { id: 'progress', label: 'In Progress' },
+              { id: 'completed', label: 'Completed' },
+              { id: 'failed', label: 'Failed' },
+              { id: 'cancelled', label: 'Cancelled' }
+            ].map(tab => {
+              const isActive = state.activeTaskTab === tab.id;
+              return `
+                <button onclick="setTaskTab('${tab.id}')" class="pb-3 text-xs font-semibold relative whitespace-nowrap px-1 ${isActive ? 'text-blue-500 font-bold' : 'text-gray-400 hover:text-gray-200'}">
+                  ${tab.label}
+                  <div class="absolute bottom-0 left-0 w-full h-[2px] bg-blue-500 rounded-t-full ${isActive ? '' : 'hidden'}"></div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Metrics Row (Using secure border-[#1b253b]) -->
+          <div class="grid grid-cols-5 gap-1.5 px-4 shrink-0">
+            <!-- Box 1: All -->
+            <div onclick="setTaskTab('all')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'all' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
+              <div class="flex items-center gap-1 justify-center">
+                <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-blue-500 shrink-0"></i>
+                <span class="text-sm font-bold text-white">48</span>
               </div>
-              <span class="text-[9px] font-bold text-green-500 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded">Completed</span>
+              <span class="text-[8.5px] text-gray-400 font-medium mt-1 whitespace-nowrap">All Tasks</span>
             </div>
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="text-xs font-bold text-white">Route T-874</h3>
-                <p class="text-[10px] text-gray-400">Target Zone: Elevator lobby spill pickup</p>
+            <!-- Box 2: In Progress -->
+            <div onclick="setTaskTab('progress')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'progress' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
+              <div class="flex items-center gap-1 justify-center">
+                <i data-lucide="play-circle" class="w-3.5 h-3.5 text-blue-400 shrink-0"></i>
+                <span class="text-sm font-bold text-white">12</span>
               </div>
-              <span class="text-[9px] font-bold text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded">Failed</span>
+              <span class="text-[8.5px] text-gray-400 font-medium mt-1 whitespace-nowrap">In Progress</span>
+            </div>
+            <!-- Box 3: Completed -->
+            <div onclick="setTaskTab('completed')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'completed' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
+              <div class="flex items-center gap-1 justify-center">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-green-500 shrink-0"></i>
+                <span class="text-sm font-bold text-white">31</span>
+              </div>
+              <span class="text-[8.5px] text-gray-400 font-medium mt-1 whitespace-nowrap">Completed</span>
+            </div>
+            <!-- Box 4: Failed -->
+            <div onclick="setTaskTab('failed')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'failed' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
+              <div class="flex items-center gap-1 justify-center">
+                <i data-lucide="x-circle" class="w-3.5 h-3.5 text-red-500 shrink-0"></i>
+                <span class="text-sm font-bold text-white">3</span>
+              </div>
+              <span class="text-[8.5px] text-gray-400 font-medium mt-1 whitespace-nowrap">Failed</span>
+            </div>
+            <!-- Box 5: Cancelled -->
+            <div onclick="setTaskTab('cancelled')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'cancelled' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
+              <div class="flex items-center gap-1 justify-center">
+                <i data-lucide="minus-circle" class="w-3.5 h-3.5 text-gray-500 shrink-0"></i>
+                <span class="text-sm font-bold text-white">2</span>
+              </div>
+              <span class="text-[8.5px] text-gray-400 font-medium mt-1 whitespace-nowrap">Cancelled</span>
             </div>
           </div>
 
-          <button onclick="openDispatchModal()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 transition-colors text-white text-xs font-semibold rounded-xl shadow-[0_4px_14px_rgba(37,99,235,0.3)]">
-            Create & Dispatch New Task Route
-          </button>
+          <!-- Sort & Export Actions Row (Perfect Alignment with image_50d9a8.jpg) -->
+          <div class="flex items-center justify-between px-4 py-3 text-xs text-gray-400 shrink-0 mt-2">
+            <div class="flex items-center gap-1.5 cursor-pointer hover:text-white transition-all" onclick="showToast('Sorting sequence toggled', 'info')">
+              <span>Sort by: <span class="text-gray-200 font-semibold">Created (Newest)</span></span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+            </div>
+            <button onclick="showToast('Exporting task logs as CSV file format...', 'success')" class="flex items-center gap-1.5 bg-[#121929] hover:bg-[#1a233a] border border-[#161f30] rounded-lg px-2.5 py-1 text-gray-200 hover:text-white transition-all text-[11px] font-semibold">
+              <i data-lucide="share" class="w-3.5 h-3.5"></i>
+              <span>Export</span>
+            </button>
+          </div>
+
+          <!-- Tasks List Container with exact padding and border-[#1b253b] -->
+          <div class="flex-1 px-4 overflow-y-auto flex flex-col gap-3 pb-[90px] hide-scrollbar">
+            ${filteredTasks.length === 0 ? `
+              <div class="py-12 text-center text-xs text-gray-500">
+                <i data-lucide="info" class="w-8 h-8 mx-auto mb-2 text-gray-600"></i>
+                No tasks logged under this category
+              </div>
+            ` : filteredTasks.map(task => {
+              const statusPill = task.status === 'progress' ? '<span class="px-2 py-0.5 rounded bg-[#10b981]/15 text-[#10b981] font-bold text-[9px] whitespace-nowrap">In Progress</span>'
+                               : task.status === 'completed' ? '<span class="px-2 py-0.5 rounded bg-blue-500/15 text-blue-400 font-bold text-[9px] whitespace-nowrap">Completed</span>'
+                               : task.status === 'failed' ? '<span class="px-2 py-0.5 rounded bg-red-500/15 text-red-400 font-bold text-[9px] whitespace-nowrap">Failed</span>'
+                               : '<span class="px-2 py-0.5 rounded bg-gray-500/15 text-gray-400 font-bold text-[9px] whitespace-nowrap">Cancelled</span>';
+              
+              return `
+                <div onclick="selectTask('${task.id}')" class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 flex items-start gap-3.5 relative transition-all duration-300 hover:bg-[#161e31] cursor-pointer">
+                  <!-- Green circle with white service dome bell icon representing Room Service delivery -->
+                  <div class="w-10 h-10 rounded-full bg-[#10b981] flex items-center justify-center text-white shrink-0 shadow-lg shadow-[#10b981]/20">
+                    <i data-lucide="bell" class="w-5 h-5"></i>
+                  </div>
+
+                  <!-- Task Card Content Details -->
+                  <div class="flex-1 min-w-0 pr-12">
+                    <h3 class="text-sm font-bold text-white tracking-wide">${task.id}</h3>
+                    <p class="text-[11px] text-gray-400 mb-2 font-semibold">${task.type}</p>
+
+                    <!-- Route Details -->
+                    <div class="text-[11px] text-gray-400 font-medium space-y-0.5">
+                      <div>From: <span class="text-gray-200 font-semibold">${task.from}</span></div>
+                      <div>To: <span class="text-gray-200 font-semibold">${task.to}</span></div>
+                    </div>
+
+                    <!-- Action Badges Footer -->
+                    <div class="flex items-center gap-2 mt-3.5 flex-wrap">
+                      ${statusPill}
+                      <div class="flex items-center gap-1 text-[10px] text-gray-300 font-semibold bg-[#161f30] border border-slate-800/80 px-2 py-0.5 rounded-md">
+                        <i data-lucide="bot" class="w-3 h-3 text-blue-400"></i>
+                        <span>${task.robot}</span>
+                      </div>
+                      ${task.eta ? `<span class="text-[10px] text-[#10b981] font-bold">ETA: ${task.eta}</span>` : ''}
+                    </div>
+                  </div>
+
+                  <!-- Right Timestamp & chevron alignment -->
+                  <div class="absolute right-4 top-4 text-right">
+                    <span class="text-[10px] text-gray-500 font-bold whitespace-nowrap">${task.time}</span>
+                  </div>
+                  <div class="absolute right-4 top-1/2 -translate-y-1/2">
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
         </div>
       `;
+
+      lucide.createIcons({ node: container });
+    }
+
+    // Complete 1:1 replica of the Task Details page based on image_50f074.jpg
+    function renderTaskDetails(container) {
+      const activeTask = state.taskItems.find(t => t.id === state.selectedTaskId) || state.taskItems[0];
+      
+      container.innerHTML = `
+        <div class="flex-1 flex flex-col bg-[#070b14] overflow-hidden animate-slide-in">
+          
+          <!-- Back header matching layout -->
+          <header class="px-4 pt-12 pb-4 flex items-center justify-between bg-[#070b14] sticky top-0 z-10 shrink-0 border-b border-gray-900/10">
+            <button onclick="navigate('tasks')" class="p-1.5 hover:bg-gray-800/50 rounded-full transition-colors">
+              <i data-lucide="arrow-left" class="w-6 h-6 text-gray-300"></i>
+            </button>
+            <h1 class="text-[17px] font-bold text-gray-100">Task Details</h1>
+            <button onclick="showToast('Loading actions list...', 'info')" class="p-1">
+              <i data-lucide="more-horizontal" class="w-6 h-6 text-gray-300"></i>
+            </button>
+          </header>
+
+          <div class="flex-1 overflow-y-auto px-4 hide-scrollbar flex flex-col gap-4 pb-[90px] pt-2">
+            
+            <!-- Summary card with exact parameters from image_50f074.jpg -->
+            <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 mobile-card-padding">
+              <div class="flex items-center justify-between border-b border-slate-800/55 pb-3 mb-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                    <i data-lucide="clipboard-list" class="w-5 h-5 text-blue-500"></i>
+                  </div>
+                  <div>
+                    <h2 class="text-base font-bold text-white leading-none">${activeTask.id}</h2>
+                    <span class="text-[10px] text-gray-500 font-semibold">Created: May 28, 2025 02:45 PM</span>
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 rounded bg-[#10b981]/15 text-[#10b981] font-bold text-[9px] tracking-wide uppercase">In Progress</span>
+              </div>
+              
+              <div class="flex gap-4 mobile-gap-reduction">
+                <!-- Left Column Spec details matching exactly -->
+                <div class="flex-1 space-y-2.5 text-xs">
+                  <div class="grid grid-cols-[75px_1fr] gap-x-2">
+                    <span class="text-gray-500 font-semibold uppercase text-[10px] tracking-tight">Type</span>
+                    <span class="text-gray-200 font-bold">${activeTask.type}</span>
+                  </div>
+                  <div class="grid grid-cols-[75px_1fr] gap-x-2">
+                    <span class="text-gray-500 font-semibold uppercase text-[10px] tracking-tight">Priority</span>
+                    <span class="text-red-500 font-extrabold text-[11px]">High</span>
+                  </div>
+                  <div class="grid grid-cols-[75px_1fr] gap-x-2">
+                    <span class="text-gray-500 font-semibold uppercase text-[10px] tracking-tight">From</span>
+                    <span class="text-gray-200 font-bold">${activeTask.from}</span>
+                  </div>
+                  <div class="grid grid-cols-[75px_1fr] gap-x-2">
+                    <span class="text-gray-500 font-semibold uppercase text-[10px] tracking-tight">To</span>
+                    <span class="text-gray-200 font-bold">${activeTask.to}</span>
+                  </div>
+                  <div class="grid grid-cols-[75px_1fr] gap-x-2">
+                    <span class="text-gray-500 font-semibold uppercase text-[10px] tracking-tight">Est. Arrival</span>
+                    <span class="text-amber-500 font-bold">2 min</span>
+                  </div>
+                  <div class="grid grid-cols-[75px_1fr] gap-x-2">
+                    <span class="text-gray-500 font-semibold uppercase text-[10px] tracking-tight">Robot</span>
+                    <span onclick="goToRobotDetailsFromTask('${activeTask.robot}')" class="text-blue-400 font-bold hover:underline cursor-pointer flex items-center gap-1">
+                      ${activeTask.robot} <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- Right Isometric illustration status kit -->
+                <div class="w-[80px] flex flex-col items-center justify-center border-l border-slate-800/60 pl-4 mobile-avatar-shrink">
+                  <div class="w-[60px] h-[78px] mb-2">${getPremiumRobotSVG('online')}</div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <span class="text-[10px] font-bold text-gray-200">86%</span>
+                    <div class="w-5 h-2.5 border border-green-500 rounded-[2px] p-[1px] relative flex items-center">
+                      <div class="h-full bg-green-500 rounded-[0.5px]" style="width: 86%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Task Progress Section matching image_50f074.jpg -->
+            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 mobile-card-padding shrink-0">
+              <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Task Progress</h3>
+              <div class="relative pl-6 space-y-4 text-xs">
+                <!-- Vertical progress line gauge -->
+                <div class="absolute left-[7px] top-2.5 bottom-2.5 w-0.5 bg-slate-800">
+                  <div class="absolute top-0 left-0 w-full h-[60%] bg-[#10b981]"></div>
+                </div>
+                
+                <!-- Steps loop matching screenshot timestamps -->
+                <div class="relative flex items-center justify-between">
+                  <div class="absolute -left-[23px] w-4.5 h-4.5 rounded-full bg-[#10b981] flex items-center justify-center text-white ring-4 ring-[#121929]">
+                    <i data-lucide="check" class="w-2.5 h-2.5"></i>
+                  </div>
+                  <span class="text-green-500 font-bold">Task Created</span>
+                  <span class="text-[10px] text-gray-500 font-bold font-mono">02:45 PM</span>
+                </div>
+
+                <div class="relative flex items-center justify-between">
+                  <div class="absolute -left-[23px] w-4.5 h-4.5 rounded-full bg-[#10b981] flex items-center justify-center text-white ring-4 ring-[#121929]">
+                    <i data-lucide="check" class="w-2.5 h-2.5"></i>
+                  </div>
+                  <span class="text-green-500 font-bold">Robot Assigned (R2-03)</span>
+                  <span class="text-[10px] text-gray-500 font-bold font-mono">02:46 PM</span>
+                </div>
+
+                <div class="relative flex items-center justify-between">
+                  <div class="absolute -left-[23px] w-4.5 h-4.5 rounded-full bg-[#10b981] flex items-center justify-center text-white ring-4 ring-[#121929]">
+                    <i data-lucide="check" class="w-2.5 h-2.5"></i>
+                  </div>
+                  <span class="text-green-500 font-bold">Picked Up</span>
+                  <span class="text-[10px] text-gray-500 font-bold font-mono">02:48 PM</span>
+                </div>
+
+                <div class="relative flex items-center justify-between">
+                  <div class="absolute -left-[23px] w-4.5 h-4.5 rounded-full bg-[#3b82f6] flex items-center justify-center ring-4 ring-[#121929]">
+                    <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+                  </div>
+                  <span class="text-white font-bold">En Route</span>
+                  <span class="text-[10px] text-gray-500 font-bold font-mono">02:49 PM</span>
+                </div>
+
+                <div class="relative flex items-center justify-between text-gray-500">
+                  <div class="absolute -left-[23px] w-4.5 h-4.5 rounded-full bg-slate-800 ring-4 ring-[#121929]"></div>
+                  <span class="font-semibold">Arriving Soon</span>
+                  <span class="text-[10px] font-bold font-mono">--</span>
+                </div>
+
+                <div class="relative flex items-center justify-between text-gray-500">
+                  <div class="absolute -left-[23px] w-4.5 h-4.5 rounded-full bg-slate-800 ring-4 ring-[#121929]"></div>
+                  <span class="font-semibold">Completed</span>
+                  <span class="text-[10px] font-bold font-mono">--</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Items List Card matching image_50f074.jpg -->
+            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 mobile-card-padding shrink-0">
+              <div class="flex items-center justify-between mb-3.5">
+                <h3 class="text-xs font-semibold text-gray-200">Items</h3>
+                <span class="px-2 py-0.5 bg-[#16223f] text-gray-400 font-bold text-[10px] rounded-full">3 Items</span>
+              </div>
+              
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center gap-3 pb-2.5 border-b border-gray-800/40">
+                  <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shrink-0">
+                    <i data-lucide="sandwich" class="w-4 h-4 text-blue-500"></i>
+                  </div>
+                  <span class="text-gray-200 font-bold">1x Club Sandwich</span>
+                </div>
+                <div class="flex items-center gap-3 pb-2.5 border-b border-gray-800/40">
+                  <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shrink-0">
+                    <i data-lucide="salad" class="w-4 h-4 text-blue-500"></i>
+                  </div>
+                  <span class="text-gray-200 font-bold">1x Caesar Salad</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shrink-0">
+                    <i data-lucide="glass-water" class="w-4 h-4 text-blue-500"></i>
+                  </div>
+                  <span class="text-gray-200 font-bold">1x Orange Juice</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Blueprint track visual corridor minimap -->
+            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 mobile-card-padding shrink-0">
+              <div class="h-28 relative bg-[#0a101d] rounded-xl overflow-hidden border border-[#1b253b]">
+                <svg width="100%" height="100%" class="absolute inset-0 opacity-25">
+                  <pattern id="grid-mini" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <path d="M 16 0 L 0 0 0 16" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#grid-mini)" />
+                </svg>
+                
+                <!-- Logistics pathing track -->
+                <svg class="absolute inset-0 w-full h-full pointer-events-none z-10">
+                  <path d="M 22% 50% L 78% 50%" fill="none" stroke="#10b981" stroke-width="2.5" stroke-dasharray="4,4" class="animate-pulse" />
+                </svg>
+                
+                <div class="absolute left-[22%] top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center">
+                  <div class="w-7 h-7 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center shadow-[0_0_10px_rgba(59,130,246,0.4)]">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-400"></i>
+                  </div>
+                  <span class="text-[8px] font-bold text-blue-400 bg-[#0a101d]/90 px-1 rounded mt-1 whitespace-nowrap">Kitchen (1F)</span>
+                </div>
+
+                <div class="absolute right-[22%] top-1/2 -translate-y-1/2 translate-x-1/2 flex flex-col items-center">
+                  <div class="w-7 h-7 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.4)]">
+                    <i data-lucide="bot" class="w-3.5 h-3.5 text-green-400"></i>
+                  </div>
+                  <span class="text-[8px] font-bold text-green-400 bg-[#0a101d]/90 px-1 rounded mt-1 whitespace-nowrap">Room 1205 (12F)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Operational Control Action Group matching picture -->
+            <div class="grid grid-cols-2 gap-3 shrink-0">
+              <button onclick="showToast('Contacting Unit R2-03 controller bus...', 'info')" class="py-2.5 bg-transparent border border-slate-800 text-gray-300 text-xs font-bold rounded-xl flex items-center justify-center gap-2">
+                <i data-lucide="message-square" class="w-4 h-4"></i> Contact Robot
+              </button>
+              <button onclick="showToast('Loading robot R2-03 live camera feed...', 'success')" class="py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(37,99,235,0.2)]">
+                <i data-lucide="video" class="w-4 h-4"></i> View Live Camera
+              </button>
+            </div>
+            
+            <button onclick="showToast('Task cancel request sent. Awaiting supervisor approval...', 'warning')" class="w-full py-2.5 bg-transparent border border-red-500/30 hover:bg-red-500/5 text-red-500 text-xs font-bold rounded-xl flex items-center justify-center gap-2 mb-4">
+              <i data-lucide="trash-2" class="w-4 h-4"></i> Cancel Task
+            </button>
+
+          </div>
+        </div>
+      `;
+      
+      lucide.createIcons();
     }
 
     function renderSettings(container) {
@@ -1667,7 +2081,7 @@
         <div class="flex-1 px-4 py-2 flex flex-col gap-5 overflow-y-auto hide-scrollbar animate-slide-in pb-[90px]">
           <div>
             <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2 px-1">Account settings</h3>
-            <div class="bg-[#121929] rounded-2xl border border-gray-855 overflow-hidden divide-y divide-gray-800/50">
+            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] overflow-hidden divide-y divide-gray-800/50">
               <div onclick="showToast('Mock profile details configured.', 'info')" class="flex items-center justify-between p-3.5 hover:bg-[#1a233a] cursor-pointer">
                 <span class="text-xs font-medium text-gray-200">Owner Profile settings</span>
                 <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
@@ -1681,7 +2095,7 @@
 
           <div>
             <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2 px-1">Fleet Management settings</h3>
-            <div class="bg-[#121929] rounded-2xl border border-gray-855 overflow-hidden divide-y divide-gray-800/50">
+            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] overflow-hidden divide-y divide-gray-800/50">
               <div onclick="showToast('Loaded geofence profiles (Read only)', 'info')" class="flex items-center justify-between p-3.5 hover:bg-[#1a233a] cursor-pointer">
                 <span class="text-xs font-medium text-gray-200">Geofences & Bounds</span>
                 <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
@@ -1693,7 +2107,7 @@
             </div>
           </div>
 
-          <button onclick="showToast('Logging out... (Simulated)', 'warning')" class="w-full flex items-center justify-center gap-2 p-3.5 bg-[#121929] hover:bg-[#1a233a] rounded-2xl border border-gray-850 text-red-500 font-semibold text-xs">
+          <button onclick="showToast('Logging out... (Simulated)', 'warning')" class="w-full flex items-center justify-center gap-2 p-3.5 bg-[#121929] hover:bg-[#1a233a] rounded-2xl border border-[#1b253b] text-red-500 font-semibold text-xs">
             <i data-lucide="log-out" class="w-4 h-4"></i>
             <span>Log Out System Session</span>
           </button>
