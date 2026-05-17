@@ -81,6 +81,17 @@
       animation: radar-ping 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
     }
 
+    /* Moving dash line animation */
+    @keyframes dash-move {
+      to {
+        stroke-dashoffset: -20;
+      }
+    }
+    .animate-dash {
+      stroke-dasharray: 6, 4;
+      animation: dash-move 1.2s linear infinite;
+    }
+
     /* High-fidelity CSS overrides for ultra-small viewports (like iPhone SE/320px width) */
     @media (max-width: 380px) {
       .mobile-card-padding {
@@ -142,7 +153,7 @@
     </main>
 
     <!-- Bottom Navigation Bar (Guaranteed dark border-t and no-wrap text) -->
-    <nav class="sticky bottom-0 w-full bg-[#070b14]/95 backdrop-blur-lg border-t border-slate-800/80 px-1 pb-safe pt-2 flex justify-between items-end z-40">
+    <nav id="bottom-nav-bar" class="sticky bottom-0 w-full bg-[#070b14]/95 backdrop-blur-lg border-t border-slate-800/80 px-1 pb-safe pt-2 flex justify-between items-end z-40">
       <button onclick="navigate('dashboard')" id="nav-dashboard" class="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl mb-1 mx-0.5 transition-all-300">
         <i data-lucide="home" class="w-5 h-5"></i>
         <span class="text-[9px] font-medium whitespace-nowrap">Dashboard</span>
@@ -301,7 +312,15 @@
           time: '09:15 AM'
         }
       ],
-      activeTelemetryTab: 'Overview'
+      activeTelemetryTab: 'Overview',
+      // Live map navigation specific state configs
+      mapZoom: 1.0,
+      mapPanX: 0,
+      mapPanY: 0,
+      isDispatchMode: false,
+      dispatchTarget: null,
+      isNavigationPaused: false,
+      activeFloor: '1F - First Floor'
     };
 
     // Helper: Build professional, gorgeous vector-based autonomous hotel delivery robot
@@ -358,7 +377,7 @@
         textCol = 'text-amber-200';
       }
       
-      toast.className = `p-3 rounded-xl border ${borderCol} ${bgCol} ${textCol} backdrop-blur-md shadow-lg flex items-center gap-2 text-xs transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+      toast.className = `p-3 rounded-xl border ${borderCol} ${bgCol} ${textCol} backdrop-blur-md shadow-lg flex items-center gap-2 text-xs transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto z-50`;
       toast.innerHTML = `
         <i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i>
         <span class="font-medium">${message}</span>
@@ -408,6 +427,8 @@
       state.highlightIdx = idx;
       if (state.currentView === 'dashboard') {
         updateDashboardDynamic();
+      } else if (state.currentView === 'live_map') {
+        renderLiveMapPanel();
       } else {
         renderApp();
       }
@@ -515,6 +536,320 @@
       }
     }
 
+    // Map zooming and panning logic
+    function zoomMap(factor) {
+      state.mapZoom = Math.max(0.6, Math.min(3.0, state.mapZoom * factor));
+      applyMapTransform();
+    }
+
+    function resetMapTransform() {
+      state.mapZoom = 1.0;
+      state.mapPanX = 0;
+      state.mapPanY = 0;
+      applyMapTransform();
+      showToast('定位已重置，视角拉回中心点', 'info');
+    }
+
+    function applyMapTransform() {
+      const mapSvg = document.getElementById('interactive-map-group');
+      if (mapSvg) {
+        mapSvg.style.transform = `translate(${state.mapPanX}px, ${state.mapPanY}px) scale(${state.mapZoom})`;
+      }
+    }
+
+    // Handle dispatch target click inside live map view
+    function handleMapClick(e) {
+      if (dragDistance > 5) return; // Dragging - do not place waypoint
+      if (!state.isDispatchMode) return;
+      
+      const mapContainer = document.getElementById('navigation-map-wrapper');
+      const rect = mapContainer.getBoundingClientRect();
+      const x = ((e.clientX - rect.left - state.mapPanX) / state.mapZoom / rect.width) * 100;
+      const y = ((e.clientY - rect.top - state.mapPanY) / state.mapZoom / rect.height) * 100;
+
+      // Draw custom route dynamically
+      state.dispatchTarget = { x, y };
+      state.isDispatchMode = false;
+
+      // Update R2-03 trajectory simulation
+      const rIdx = state.robots.findIndex(r => r.id === 'R2-03');
+      if (rIdx !== -1) {
+        const robot = state.robots[rIdx];
+        showToast('计算最新安全避障路径中...', 'info');
+        
+        // Push destination point
+        const routePath = document.getElementById('dynamic-dispatch-route');
+        if (routePath) {
+          routePath.setAttribute('d', `M ${robot.x}% ${robot.y}% Q ${(robot.x + x)/2}% ${(robot.y + y)/2 - 10}% ${x}% ${y}%`);
+          routePath.classList.remove('hidden');
+        }
+
+        setTimeout(() => {
+          showToast('Nexbot Pro 启动，正在前往指定目标位置...', 'success');
+          
+          let steps = 0;
+          const startX = robot.x;
+          const startY = robot.y;
+          const interval = setInterval(() => {
+            if (state.isNavigationPaused) return; // If paused, hold position
+            steps++;
+            const t = steps / 20;
+            robot.x = startX + (x - startX) * t;
+            robot.y = startY + (y - startY) * t;
+            robot.heading = Math.atan2(y - startY, x - startX) * (180 / Math.PI);
+            
+            // Redraw
+            renderLiveMapOverlayRobots();
+            
+            if (steps >= 20) {
+              clearInterval(interval);
+              robot.location = "First Floor • Zone X";
+              robot.activity = "Standby";
+              routePath.classList.add('hidden');
+              showToast('R2-03 已安全抵达派遣目标区！', 'success');
+            }
+          }, 200);
+        }, 1500);
+      }
+      
+      // Update Banner UI
+      const banner = document.getElementById('dispatch-mode-banner');
+      if (banner) banner.classList.add('hidden');
+    }
+
+    // Toggle pause simulation
+    function togglePauseNavigation() {
+      state.isNavigationPaused = !state.isNavigationPaused;
+      const btn = document.getElementById('pause-nav-btn');
+      if (btn) {
+        if (state.isNavigationPaused) {
+          btn.innerHTML = `<div class="w-11 h-11 bg-amber-500/10 border border-amber-500 rounded-2xl flex items-center justify-center text-amber-500 shrink-0"><i data-lucide="play" class="w-5.5 h-5.5"></i></div><span class="text-[9px] text-gray-400 font-medium">Resume</span>`;
+          showToast('Nexbot 运动控制系统已挂起，电机抱闸锁定', 'warning');
+        } else {
+          btn.innerHTML = `<div class="w-11 h-11 bg-white/5 border border-slate-800 rounded-2xl flex items-center justify-center text-gray-300 shrink-0"><i data-lucide="pause" class="w-5.5 h-5.5"></i></div><span class="text-[9px] text-gray-400 font-medium">Pause</span>`;
+          showToast('恢复任务，控制总线信号正常', 'success');
+        }
+        lucide.createIcons({ node: btn });
+      }
+    }
+
+    // VOIP Calling Simulation Modal
+    function openRobotCallIntercom() {
+      const activeBot = state.robots[state.highlightIdx];
+      const modal = document.createElement('div');
+      modal.id = 'calling-simulation-modal';
+      modal.className = 'absolute inset-0 bg-black/95 z-50 flex flex-col justify-between p-8 animate-slide-in';
+      modal.innerHTML = `
+        <div class="flex flex-col items-center mt-12">
+          <span class="text-[10px] text-blue-400 font-extrabold tracking-widest uppercase mb-1">Nexbot Intercom VoIP</span>
+          <h2 class="text-2xl font-bold text-white mb-2">${activeBot.id} (Intercom)</h2>
+          <span id="call-status" class="text-xs text-gray-400">正在建立高带宽数据连接通道...</span>
+        </div>
+
+        <div class="flex flex-col items-center justify-center my-6 relative">
+          <!-- Waveform Intercom visuals -->
+          <div class="w-32 h-32 rounded-full border-4 border-blue-500/20 flex items-center justify-center mb-8 relative">
+            <div class="absolute inset-0 rounded-full bg-blue-500/10 scale-110 animate-ping"></div>
+            <div class="w-20 h-20 rounded-full bg-blue-600/35 border border-blue-400/50 flex items-center justify-center text-white">
+              <i data-lucide="bot" class="w-10 h-10 text-white"></i>
+            </div>
+          </div>
+          
+          <canvas id="audiowave-canvas" class="w-full h-16 opacity-0 transition-opacity duration-1000"></canvas>
+        </div>
+
+        <div class="flex gap-8 justify-center mb-12">
+          <button onclick="closeRobotCallIntercom(false)" class="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center text-white shadow-lg shadow-red-600/30 hover:bg-red-500 active:scale-90 transition-all">
+            <i data-lucide="phone-off" class="w-6 h-6"></i>
+          </button>
+          <button id="answer-call-btn" onclick="answerCallIntercom()" class="w-16 h-16 rounded-full bg-green-600 flex items-center justify-center text-white shadow-lg shadow-green-600/30 hover:bg-green-500 active:scale-90 transition-all">
+            <i data-lucide="phone" class="w-6 h-6"></i>
+          </button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      lucide.createIcons({ node: modal });
+
+      // Start static canvas wave drawing
+      initCallAudioWaves();
+    }
+
+    function answerCallIntercom() {
+      const status = document.getElementById('call-status');
+      if (status) status.innerHTML = `<span class="text-green-400 font-extrabold uppercase animate-pulse">对讲呼叫已接通 [0.4μs Delay]</span>`;
+      
+      const canvas = document.getElementById('audiowave-canvas');
+      if (canvas) canvas.classList.remove('opacity-0');
+
+      const answerBtn = document.getElementById('answer-call-btn');
+      if (answerBtn) answerBtn.remove();
+      
+      showToast('双向多媒体语音管道已部署完毕。', 'success');
+    }
+
+    let audioWaveAnimFrame = null;
+    function initCallAudioWaves() {
+      const canvas = document.getElementById('audiowave-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = 64;
+
+      let phase = 0;
+      function draw() {
+        if (!document.getElementById('calling-simulation-modal')) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        
+        for (let x = 0; x < canvas.width; x++) {
+          const y = canvas.height / 2 + Math.sin(x * 0.04 + phase) * Math.cos(x * 0.01 + phase) * 16;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        phase += 0.08;
+        audioWaveAnimFrame = requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    function closeRobotCallIntercom(success = true) {
+      if (audioWaveAnimFrame) cancelAnimationFrame(audioWaveAnimFrame);
+      const modal = document.getElementById('calling-simulation-modal');
+      if (modal) modal.remove();
+      if (!success) {
+        showToast('对讲呼叫已终止。', 'info');
+      }
+    }
+
+    // LiDAR Scanning Sensor Diagnostic Modal
+    function openLidarDiagnostic() {
+      const modal = document.createElement('div');
+      modal.id = 'lidar-radar-modal';
+      modal.className = 'absolute inset-0 bg-[#070b14]/98 z-50 flex flex-col p-6 overflow-y-auto animate-slide-in';
+      modal.innerHTML = `
+        <div class="flex justify-between items-center mb-6 pt-6 shrink-0">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="compass" class="w-5 h-5 text-blue-500 animate-spin"></i> LiDAR Real-time Scan
+          </h2>
+          <button onclick="document.getElementById('lidar-radar-modal').remove()" class="p-1.5 hover:bg-gray-800 rounded-full text-gray-400 hover:text-white">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="flex-1 flex flex-col items-center justify-center shrink-0">
+          <canvas id="lidar-radar-canvas" class="w-72 h-72 rounded-full border border-blue-500/20 bg-[#080d1a] shadow-[0_0_25px_rgba(59,130,246,0.15)]"></canvas>
+          <div class="mt-4 flex gap-4 text-xs">
+            <span class="flex items-center gap-1.5 text-green-400 font-semibold"><span class="w-2 h-2 rounded-full bg-green-500"></span> 50Hz Standard</span>
+            <span class="flex items-center gap-1.5 text-blue-400 font-semibold"><span class="w-2 h-2 rounded-full bg-blue-500"></span> LiDAR Array Operational</span>
+          </div>
+        </div>
+
+        <div class="bg-[#121929] rounded-xl border border-[#1b253b] p-4 mt-6 text-xs space-y-2.5">
+          <h3 class="font-bold text-gray-200">ECU Sensor Feedback</h3>
+          <div class="flex justify-between text-gray-400">
+            <span>Laser Range Finder range</span>
+            <span class="text-gray-200 font-bold">45m</span>
+          </div>
+          <div class="flex justify-between text-gray-400">
+            <span>SLAM Position Confidence</span>
+            <span class="text-green-500 font-bold">99.8%</span>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      lucide.createIcons({ node: modal });
+
+      // Init radar scanning animation
+      initLidarRadarCanvas();
+    }
+
+    function initLidarRadarCanvas() {
+      const canvas = document.getElementById('lidar-radar-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 300;
+      canvas.height = 300;
+
+      let angle = 0;
+      // Generate some dummy static obstacle points
+      const points = Array.from({ length: 15 }, () => ({
+        distance: 50 + Math.random() * 80,
+        angle: Math.random() * Math.PI * 2,
+        opacity: Math.random()
+      }));
+
+      function render() {
+        if (!document.getElementById('lidar-radar-modal')) return;
+        ctx.clearRect(0, 0, 300, 300);
+        const cx = 150;
+        const cy = 150;
+        const r = 130;
+
+        // Draw concentric range circles
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        for (let i = 1; i <= 3; i++) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, (r / 3) * i, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Draw cross lines
+        ctx.beginPath();
+        ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy);
+        ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r);
+        ctx.stroke();
+
+        // Draw scanning laser beam line
+        const sweepX = cx + Math.cos(angle) * r;
+        const sweepY = cy + Math.sin(angle) * r;
+        
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        grad.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+        grad.addColorStop(1, 'rgba(59, 130, 246, 0)');
+        
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, angle - 0.25, angle);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(sweepX, sweepY);
+        ctx.stroke();
+
+        // Draw dynamic LiDAR obstacles points
+        points.forEach(p => {
+          const px = cx + Math.cos(p.angle) * p.distance;
+          const py = cy + Math.sin(p.angle) * p.distance;
+          
+          ctx.fillStyle = `rgba(34, 197, 94, ${p.opacity})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Pulse some fade values
+          p.opacity -= 0.01;
+          if (p.opacity <= 0) {
+            p.opacity = 1;
+            p.distance = 50 + Math.random() * 80;
+            p.angle = Math.random() * Math.PI * 2;
+          }
+        });
+
+        angle = (angle + 0.03) % (Math.PI * 2);
+        requestAnimationFrame(render);
+      }
+      render();
+    }
+
     // Simulation logic to update coordinates, battery values, dynamic logs
     setInterval(() => {
       state.robots = state.robots.map(r => {
@@ -562,6 +897,8 @@
         updateRobotsDynamic();
       } else if (state.currentView === 'robot_details') {
         updateRobotDetailsDynamic();
+      } else if (state.currentView === 'live_map') {
+        renderLiveMapOverlayRobots();
       }
     }, 3000);
 
@@ -570,6 +907,14 @@
       renderBottomNav();
       
       const mainContent = document.getElementById('main-content');
+      const bottomNavBar = document.getElementById('bottom-nav-bar');
+
+      // Live map completely handles its own edge-to-edge content, so hide bottom nav if on live map
+      if (state.currentView === 'live_map') {
+        bottomNavBar.classList.add('hidden');
+      } else {
+        bottomNavBar.classList.remove('hidden');
+      }
       
       if (state.currentView === 'dashboard') {
         renderDashboardSkeleton(mainContent);
@@ -587,6 +932,8 @@
         renderAnalytics(mainContent);
       } else if (state.currentView === 'payload_details') {
         renderPayloadDetails(mainContent);
+      } else if (state.currentView === 'live_map') {
+        renderLiveMapNavigation(mainContent);
       }
       
       lucide.createIcons();
@@ -752,7 +1099,7 @@
                 <button onclick="showToast('Overlay layers updated', 'info')" class="p-1.5 bg-[#1a233a] rounded-lg border border-gray-700/50 hover:bg-[#222e4c] transition-colors">
                   <i data-lucide="layers" class="w-4 h-4 text-gray-300"></i>
                 </button>
-                <button onclick="showToast('Expanding map grid views...', 'info')" class="p-1.5 bg-[#1a233a] rounded-lg border border-gray-700/50 hover:bg-[#222e4c] transition-colors">
+                <button onclick="navigate('live_map')" class="p-1.5 bg-[#1a233a] rounded-lg border border-gray-700/50 hover:bg-[#222e4c] transition-colors">
                   <i data-lucide="maximize" class="w-4 h-4 text-gray-300"></i>
                 </button>
               </div>
@@ -774,7 +1121,7 @@
                   </pattern>
                   <rect width="100%" height="100%" fill="url(#grid)" />
                 </g>
-                <g fill="#475569" font-size="8" font-family="sans-serif" font-weight="700" text-anchor="middle">
+                <g fill="#475569" font-size="8" font-family="sans-serif" font-weight="700" text-anchor="middle" letter-spacing="1">
                   <text x="25%" y="28%" fill="#2c5282">LOBBY</text>
                   <text x="52%" y="30%" fill="#2c5282" font-size="7">ELEVATOR<tspan x="52%" y="38%">LOBBY</tspan></text>
                   <text x="80%" y="28%" fill="#2c5282">CONCIERGE</text>
@@ -912,7 +1259,7 @@
             </div>
 
             <!-- Battery Health Trend Chart -->
-            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-3 mobile-card-padding relative flex flex-col justify-between">
+            <div class="bg-[#121929] rounded-2xl p-3 mobile-card-padding relative flex flex-col justify-between">
               <div class="flex justify-between items-start gap-1">
                  <h3 class="text-xs font-semibold text-gray-200 mobile-title-shrink">Battery Overview</h3>
                  <span id="battery-trend-avg" class="text-[8px] xs:text-[10px] text-green-400 font-bold shrink-0">78% Avg</span>
@@ -950,7 +1297,7 @@
                   <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h4 class="text-xs font-bold text-white leading-tight">Low Battery</h4>
+                  <h4 class="text-xs font-bold text-white font-semibold leading-tight">Low Battery</h4>
                   <p class="text-[10px] text-gray-500 truncate">R1-05 battery below 20%</p>
                 </div>
               </div>
@@ -960,7 +1307,7 @@
                   <i data-lucide="ban" class="w-4 h-4 text-yellow-500"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h4 class="text-xs font-bold text-white leading-tight">Blocked Path</h4>
+                  <h4 class="text-xs font-bold text-white font-semibold leading-tight">Blocked Path</h4>
                   <p class="text-[10px] text-gray-500 truncate">R2-01 path is blocked</p>
                 </div>
               </div>
@@ -970,7 +1317,7 @@
                   <i data-lucide="droplet" class="w-4 h-4 text-yellow-500"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h4 class="text-xs font-bold text-white leading-tight">Spill Detected</h4>
+                  <h4 class="text-xs font-bold text-white font-semibold leading-tight">Spill Detected</h4>
                   <p class="text-[10px] text-gray-500 truncate">R2-02 tray spill detected</p>
                 </div>
               </div>
@@ -980,7 +1327,7 @@
                   <i data-lucide="wrench" class="w-4 h-4 text-gray-400"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h4 class="text-xs font-bold text-white leading-tight">Maintenance Due</h4>
+                  <h4 class="text-xs font-bold text-white font-semibold leading-tight">Maintenance Due</h4>
                   <p class="text-[10px] text-gray-500 truncate">R1-03 scheduled maintenance</p>
                 </div>
                 <span class="text-[10px] text-gray-500 font-medium shrink-0 whitespace-nowrap">1 hr ago</span>
@@ -1080,7 +1427,7 @@
       if (highlightCameraStatus) {
         highlightCameraStatus.innerHTML = `
           <div class="w-1.5 h-1.5 rounded-full ${highlightedRobot.status === 'offline' ? 'bg-red-500' : 'bg-green-500 animate-pulse'}"></div>
-          <span class="font-bold text-[7px] uppercase tracking-wider">${highlightedRobot.status === 'offline' ? 'Offline' : 'Live Camera'}</span>
+          <span class="font-bold text-[7px] uppercase whitespace-nowrap">${highlightedRobot.status === 'offline' ? 'Offline' : 'Live Camera'}</span>
         `;
       }
     }
@@ -1210,7 +1557,6 @@
       }
     }
 
-    // Complete rewrite of renderRobotDetails matching the visual layouts in image_50656c.jpg exactly
     function renderRobotDetails(container) {
       const highlightedRobot = state.robots[state.highlightIdx];
 
@@ -1370,16 +1716,16 @@
                         </div>
                       </div>
                       
-                      <button onclick="showToast('Initializing active map coordinates stream...', 'info')" class="w-full mt-3 py-1.5 bg-transparent border border-blue-500/40 text-blue-500 text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 hover:bg-blue-600/10 transition-colors whitespace-nowrap">
+                      <button onclick="navigate('live_map')" class="w-full mt-3 py-1.5 bg-transparent border border-blue-500/40 text-blue-500 text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 hover:bg-blue-600/10 transition-colors whitespace-nowrap">
                         <i data-lucide="map" class="w-3.5 h-3.5"></i> View Live Map
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <!-- Battery & Power and Payload Double columns layout (Using border-[#1b253b]) -->
+                <!-- Battery & Power and Payload Double columns layout -->
                 <div class="grid grid-cols-2 gap-3 mobile-gap-reduction shrink-0 mt-4">
-                  <!-- Left side: Battery & Power -->
+                  <!-- Left: Battery & Power -->
                   <div class="bg-[#121929] rounded-2xl p-3 border border-[#1b253b] flex flex-col justify-between mobile-card-padding">
                     <h3 class="text-xs font-semibold text-gray-200 mb-3 mobile-title-shrink">Battery & Power</h3>
                     <div class="flex flex-col xs:flex-row items-center gap-3 mobile-gap-reduction mb-4">
@@ -1419,7 +1765,7 @@
                     </button>
                   </div>
 
-                  <!-- Right side: Payload status -->
+                  <!-- Right: Payload status -->
                   <div class="bg-[#121929] rounded-2xl p-3 border border-[#1b253b] flex flex-col justify-between mobile-card-padding">
                     <h3 class="text-xs font-semibold text-gray-200 mb-3 mobile-title-shrink">Payload Status</h3>
                     <div class="flex flex-col xs:flex-row items-center gap-3 mobile-gap-reduction mb-4">
@@ -1489,7 +1835,7 @@
                        <span class="text-[10px] text-green-500 font-bold shrink-0">Active</span>
                      </div>
                      <div class="flex justify-between items-center bg-[#161f30] px-3 py-2.5 rounded-lg border border-slate-800/85">
-                       <div class="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium min-w-0">
+                       <div class="flex items-center gap-1.5 text-[10px] text-gray-300 font-medium min-w-0">
                          <i data-lucide="minus-circle" class="w-3.5 h-3.5 text-gray-600 shrink-0"></i> 
                          <span class="truncate">E-Stop</span>
                        </div>
@@ -1748,7 +2094,7 @@
             }).join('')}
           </div>
 
-          <!-- Metrics Row (Using secure border-[#1b253b]) -->
+          <!-- Metrics Row -->
           <div class="grid grid-cols-5 gap-1.5 px-4 shrink-0">
             <!-- Box 1: All -->
             <div onclick="setTaskTab('all')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'all' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
@@ -1792,7 +2138,7 @@
             </div>
           </div>
 
-          <!-- Sort & Export Actions Row (Perfect Alignment with image_50d9a8.jpg) -->
+          <!-- Sort & Export Actions Row -->
           <div class="flex items-center justify-between px-4 py-3 text-xs text-gray-400 shrink-0 mt-2">
             <div class="flex items-center gap-1.5 cursor-pointer hover:text-white transition-all" onclick="showToast('Sorting sequence toggled', 'info')">
               <span>Sort by: <span class="text-gray-200 font-semibold">Created (Newest)</span></span>
@@ -1804,7 +2150,7 @@
             </button>
           </div>
 
-          <!-- Tasks List Container with exact padding and border-[#1b253b] -->
+          <!-- Tasks List Container -->
           <div class="flex-1 px-4 overflow-y-auto flex flex-col gap-3 pb-[90px] hide-scrollbar">
             ${filteredTasks.length === 0 ? `
               <div class="py-12 text-center text-xs text-gray-500">
@@ -1864,7 +2210,6 @@
       lucide.createIcons({ node: container });
     }
 
-    // Complete 1:1 replica of the Task Details page based on image_50f074.jpg
     function renderTaskDetails(container) {
       const activeTask = state.taskItems.find(t => t.id === state.selectedTaskId) || state.taskItems[0];
       
@@ -1884,7 +2229,7 @@
 
           <div class="flex-1 overflow-y-auto px-4 hide-scrollbar flex flex-col gap-4 pb-[90px] pt-2">
             
-            <!-- Summary card with exact parameters from image_50f074.jpg -->
+            <!-- Summary card with exact parameters -->
             <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 mobile-card-padding">
               <div class="flex items-center justify-between border-b border-slate-800/55 pb-3 mb-3">
                 <div class="flex items-center gap-3">
@@ -1943,7 +2288,7 @@
               </div>
             </div>
 
-            <!-- Task Progress Section matching image_50f074.jpg -->
+            <!-- Task Progress Section matching exactly -->
             <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 mobile-card-padding shrink-0">
               <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Task Progress</h3>
               <div class="relative pl-6 space-y-4 text-xs">
@@ -1999,8 +2344,8 @@
               </div>
             </div>
 
-            <!-- Items List Card matching image_50f074.jpg -->
-            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 mobile-card-padding shrink-0">
+            <!-- Items List Card -->
+            <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] p-4 mobile-card-padding shrink-0">
               <div class="flex items-center justify-between mb-3.5">
                 <h3 class="text-xs font-semibold text-gray-200">Items</h3>
                 <span class="px-2 py-0.5 bg-[#16223f] text-gray-400 font-bold text-[10px] rounded-full">3 Items</span>
@@ -2059,7 +2404,7 @@
               </div>
             </div>
 
-            <!-- Operational Control Action Group matching picture -->
+            <!-- Operational Control Action Group -->
             <div class="grid grid-cols-2 gap-3 shrink-0">
               <button onclick="showToast('Contacting Unit R2-03 controller bus...', 'info')" class="py-2.5 bg-transparent border border-slate-800 text-gray-300 text-xs font-bold rounded-xl flex items-center justify-center gap-2">
                 <i data-lucide="message-square" class="w-4 h-4"></i> Contact Robot
@@ -2080,12 +2425,10 @@
       lucide.createIcons();
     }
 
-    // High fidelity Analytics Page View matching image_5155a8.jpg exactly
     function renderAnalytics(container) {
       container.innerHTML = `
         <div class="flex-1 flex flex-col bg-[#070b14] overflow-hidden animate-slide-in">
           
-          <!-- Header (1:1 with arrow-left, Title and Datepicker button) -->
           <header class="px-4 pt-12 pb-4 flex items-center justify-between bg-[#070b14] sticky top-0 z-10 shrink-0 border-b border-slate-900/30">
             <button onclick="goBack()" class="p-1.5 hover:bg-gray-800/50 rounded-full transition-colors">
               <i data-lucide="arrow-left" class="w-6 h-6 text-gray-300"></i>
@@ -2100,7 +2443,6 @@
 
           <div class="flex-1 overflow-y-auto px-4 hide-scrollbar flex flex-col gap-4 pb-[90px] pt-2">
             
-            <!-- 6 sub-tabs identical layout with Overview active -->
             <div class="flex gap-4 border-b border-slate-800/80 -mx-4 px-4 overflow-x-auto hide-scrollbar shrink-0 bg-[#070b14]/50">
               ${['Overview', 'Robots', 'Tasks', 'Performance', 'Usage', 'Alerts'].map(tab => {
                 const isActive = tab === 'Overview';
@@ -2113,7 +2455,7 @@
             </div>
 
             <!-- Task Overview Donut Card -->
-            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 shrink-0 mobile-card-padding">
+            <div class="bg-[#121929] rounded-2xl p-4 shrink-0 mobile-card-padding">
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-1.5">
                   <h3 class="text-xs font-semibold text-gray-200">Task Overview</h3>
@@ -2131,16 +2473,12 @@
                 <div class="relative w-[100px] h-[100px] shrink-0">
                   <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
                     <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="12" />
-                    <!-- Green segment for Completed (79% of 251 = 198.3) -->
                     <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="12" 
                       stroke-dasharray="198.3 251" stroke-dashoffset="0" class="transition-all duration-1000 ease-out" />
-                    <!-- Blue segment for In Progress (10% of 251 = 25.1) -->
                     <circle cx="50" cy="50" r="40" fill="none" stroke="#3b82f6" stroke-width="12" 
                       stroke-dasharray="25.1 251" stroke-dashoffset="-198.3" class="transition-all duration-1000 ease-out" />
-                    <!-- Red segment for Failed (5% of 251 = 12.5) -->
                     <circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" stroke-width="12" 
                       stroke-dasharray="12.5 251" stroke-dashoffset="-223.4" class="transition-all duration-1000 ease-out" />
-                    <!-- Grey segment for Cancelled (6% of 251 = 15) -->
                     <circle cx="50" cy="50" r="40" fill="none" stroke="#64748b" stroke-width="12" 
                       stroke-dasharray="15.1 251" stroke-dashoffset="-235.9" class="transition-all duration-1000 ease-out" />
                   </svg>
@@ -2184,7 +2522,7 @@
               </div>
             </div>
 
-            <!-- Double column charts response space (Avg Response & Success Rate) -->
+            <!-- Double column charts response space -->
             <div class="grid grid-cols-2 gap-4 shrink-0">
               <!-- Average Response Time -->
               <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 mobile-card-padding flex flex-col justify-between">
@@ -2201,11 +2539,9 @@
                   </div>
                 </div>
                 
-                <!-- Mini Line chart with glowing blue node dots -->
                 <div class="h-16 w-full relative mt-1">
                   <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full">
                     <path d="M0,25 Q15,22 30,28 T60,20 T80,18 T100,12" fill="none" stroke="#3b82f6" stroke-width="2" />
-                    <!-- Glowing dots -->
                     <circle cx="30" cy="28" r="2.5" fill="#3b82f6" class="animate-pulse" />
                     <circle cx="60" cy="20" r="2.5" fill="#3b82f6" class="animate-pulse" />
                     <circle cx="80" cy="18" r="2.5" fill="#3b82f6" class="animate-pulse" />
@@ -2234,7 +2570,6 @@
                   </div>
                 </div>
                 
-                <!-- Dynamic Bar chart with vertical green rounded capsules, May 24 has red bottom portion! -->
                 <div class="h-16 flex items-end justify-between px-1 mt-1">
                   ${[
                     { date: 'May 22', height: 'h-full', hasError: false },
@@ -2257,8 +2592,8 @@
               </div>
             </div>
 
-            <!-- Popular Task Types list with custom icons matching perfectly -->
-            <div class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 shrink-0 mobile-card-padding">
+            <!-- Popular Task Types list -->
+            <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 mobile-card-padding">
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-1.5">
                   <h3 class="text-xs font-semibold text-gray-200">Popular Task Types</h3>
@@ -2271,7 +2606,6 @@
               </div>
 
               <div class="space-y-3.5 text-xs">
-                <!-- Row 1: Room Service -->
                 <div class="space-y-1.5">
                   <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2.5">
@@ -2287,7 +2621,6 @@
                   </div>
                 </div>
 
-                <!-- Row 2: Luggage Delivery -->
                 <div class="space-y-1.5">
                   <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2.5">
@@ -2300,54 +2633,6 @@
                   </div>
                   <div class="w-full h-1.5 bg-slate-800/40 rounded-full overflow-hidden">
                     <div class="h-full bg-purple-500 rounded-full transition-all duration-1000" style="width: 22%"></div>
-                  </div>
-                </div>
-
-                <!-- Row 3: Restaurant Delivery -->
-                <div class="space-y-1.5">
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-6 h-6 rounded-full bg-amber-600/20 flex items-center justify-center text-amber-400">
-                        <i data-lucide="utensils" class="w-3.5 h-3.5"></i>
-                      </div>
-                      <span class="text-gray-200 font-medium">Restaurant Delivery</span>
-                    </div>
-                    <span class="text-amber-400 font-bold font-mono">28 (17%)</span>
-                  </div>
-                  <div class="w-full h-1.5 bg-slate-800/40 rounded-full overflow-hidden">
-                    <div class="h-full bg-amber-500 rounded-full transition-all duration-1000" style="width: 17%"></div>
-                  </div>
-                </div>
-
-                <!-- Row 4: Concierge -->
-                <div class="space-y-1.5">
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-6 h-6 rounded-full bg-teal-600/20 flex items-center justify-center text-teal-400">
-                        <i data-lucide="concierge-bell" class="w-3.5 h-3.5"></i>
-                      </div>
-                      <span class="text-gray-200 font-medium">Concierge</span>
-                    </div>
-                    <span class="text-teal-400 font-bold font-mono">18 (11%)</span>
-                  </div>
-                  <div class="w-full h-1.5 bg-slate-800/40 rounded-full overflow-hidden">
-                    <div class="h-full bg-teal-500 rounded-full transition-all duration-1000" style="width: 11%"></div>
-                  </div>
-                </div>
-
-                <!-- Row 5: Others -->
-                <div class="space-y-1.5">
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-6 h-6 rounded-full bg-slate-600/20 flex items-center justify-center text-slate-400">
-                        <i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i>
-                      </div>
-                      <span class="text-gray-200 font-medium">Others</span>
-                    </div>
-                    <span class="text-slate-400 font-bold font-mono">12 (8%)</span>
-                  </div>
-                  <div class="w-full h-1.5 bg-slate-800/40 rounded-full overflow-hidden">
-                    <div class="h-full bg-slate-500 rounded-full transition-all duration-1000" style="width: 8%"></div>
                   </div>
                 </div>
               </div>
@@ -2385,14 +2670,12 @@
                   <div class="flex-1 w-full relative">
                     <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full pt-2">
                       <path d="M0,25 Q15,15 30,20 T45,22 T60,18 T75,21 T100,16" fill="none" stroke="#3b82f6" stroke-width="2" />
-                      <!-- Glowing dots -->
                       <circle cx="30" cy="20" r="2" fill="#3b82f6" />
                       <circle cx="45" cy="22" r="2" fill="#3b82f6" />
                       <circle cx="60" cy="18" r="2" fill="#3b82f6" />
                       <circle cx="75" cy="21" r="2" fill="#3b82f6" />
                       <circle cx="100" cy="16" r="2.5" fill="#3b82f6" />
                     </svg>
-                    <!-- Floating blue badge at the end of the line chart -->
                     <div class="absolute right-0 top-1 bg-blue-500 text-white font-mono text-[8px] font-bold px-1 py-0.5 rounded shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-bounce">78%</div>
                   </div>
                   <div class="flex justify-between text-[7px] text-gray-500 font-medium scale-90 border-t border-slate-800/40 pt-1 mt-1">
@@ -2411,12 +2694,10 @@
       lucide.createIcons({ node: container });
     }
 
-    // High fidelity Payload Details View matching image_51590c.jpg exactly
     function renderPayloadDetails(container) {
       container.innerHTML = `
         <div class="flex-1 flex flex-col bg-[#070b14] overflow-hidden animate-slide-in">
           
-          <!-- Header (Matching layout with title, back arrow and right ... menu icon) -->
           <header class="px-4 pt-12 pb-4 flex items-center justify-between bg-[#070b14] sticky top-0 z-10 shrink-0 border-b border-gray-900/10">
             <button onclick="goBack()" class="p-1.5 hover:bg-gray-800/50 rounded-full transition-colors">
               <i data-lucide="arrow-left" class="w-6 h-6 text-gray-300"></i>
@@ -2428,8 +2709,6 @@
           </header>
 
           <div class="flex-1 overflow-y-auto px-4 hide-scrollbar flex flex-col gap-4 pb-[90px] pt-2">
-            
-            <!-- Summary card (1:1 with green Stable beacon, Current Load and Capacity params) -->
             <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 mobile-card-padding flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shrink-0 shadow-lg shadow-blue-500/5">
@@ -2456,7 +2735,6 @@
               </div>
             </div>
 
-            <!-- Overview Box ( suitcase icon ) -->
             <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 mobile-card-padding">
               <div class="flex items-center gap-2 mb-4">
                 <i data-lucide="briefcase" class="w-4 h-4 text-blue-500"></i>
@@ -2494,7 +2772,6 @@
               </div>
             </div>
 
-            <!-- Load Information ( scale icon ) -->
             <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 mobile-card-padding">
               <div class="flex items-center gap-2 mb-4">
                 <i data-lucide="scale" class="w-4 h-4 text-blue-500"></i>
@@ -2511,7 +2788,6 @@
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-gray-500 font-medium">Utilization</span>
-                  <!-- Utilization bar filled to 26% matching precisely -->
                   <div class="flex items-center gap-3 flex-1 justify-end max-w-[70%]">
                     <div class="w-full h-2 bg-slate-800/40 rounded-full overflow-hidden">
                       <div class="h-full bg-blue-500 rounded-full transition-all duration-1000" style="width: 26%"></div>
@@ -2522,7 +2798,6 @@
               </div>
             </div>
 
-            <!-- Dimensions ( blue pen/edit icon ) -->
             <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 mobile-card-padding">
               <div class="flex items-center gap-2 mb-4">
                 <i data-lucide="edit-3" class="w-4 h-4 text-blue-500"></i>
@@ -2544,7 +2819,6 @@
               </div>
             </div>
 
-            <!-- Configuration ( blue gear icon ) -->
             <div class="bg-[#121929] rounded-2xl p-4 border border-[#1b253b] shrink-0 mobile-card-padding">
               <div class="flex items-center gap-2 mb-4">
                 <i data-lucide="settings" class="w-4 h-4 text-blue-500"></i>
@@ -2580,161 +2854,441 @@
       lucide.createIcons({ node: container });
     }
 
-    function renderTasks(container) {
-      let filteredTasks = state.taskItems || [];
-      if (state.activeTaskTab !== 'all') {
-        filteredTasks = state.taskItems.filter(t => t.status === state.activeTaskTab);
-      }
-
+    // High fidelity HUD-based full background map view
+    function renderLiveMapNavigation(container) {
       container.innerHTML = `
-        <div class="flex-1 flex flex-col bg-[#070b14] overflow-hidden animate-slide-in">
+        <div class="flex-1 flex flex-col bg-[#070b14] overflow-hidden animate-slide-in relative h-full w-full">
           
-          <!-- Header (Matching exact screenshot on Tasks page) -->
-          <header class="px-5 pt-12 pb-4 flex items-center justify-between bg-[#070b14] shrink-0">
-            <h1 class="text-2xl font-bold text-gray-100 tracking-wide">Tasks</h1>
-            <div class="flex gap-4">
-              <button onclick="showToast('搜索功能已就绪', 'info')" class="text-gray-400 hover:text-white transition-colors">
-                <i data-lucide="search" class="w-5.5 h-5.5"></i>
-              </button>
-              <button onclick="showToast('筛选面板已加载', 'info')" class="text-gray-400 hover:text-white transition-colors">
-                <i data-lucide="sliders-horizontal" class="w-5.5 h-5.5"></i>
-              </button>
-            </div>
-          </header>
+          <!-- 1. FULL BACKGROUND CAD BLUEPRINT MAP (占据整个底层背景) -->
+          <div class="absolute inset-0 z-0 bg-[#070d1a] overflow-hidden flex items-center justify-center select-none" id="navigation-map-wrapper">
+            
+            <!-- Map Drag & Swipe Event Overlay (置于地图层上方、UI控制面板下方) -->
+            <div class="absolute inset-0 z-10 cursor-grab active:cursor-grabbing" 
+                 id="map-drag-overlay"
+                 onmousedown="startMapDragging(event)"
+                 onmousemove="onMapDragging(event)"
+                 onmouseup="stopMapDragging(event)"
+                 onmouseleave="stopMapDragging(event)"
+                 ontouchstart="startMapDraggingTouch(event)"
+                 ontouchmove="onMapDraggingTouch(event)"
+                 ontouchend="stopMapDragging(event)"
+                 onclick="handleMapClick(event)"></div>
 
-          <!-- 5 tabs selectors perfectly aligned with image_50d9a8.jpg -->
-          <div class="flex justify-between items-center px-4 border-b border-slate-800/80 mb-4 shrink-0 overflow-x-auto hide-scrollbar">
-            ${[
-              { id: 'all', label: 'All Tasks' },
-              { id: 'progress', label: 'In Progress' },
-              { id: 'completed', label: 'Completed' },
-              { id: 'failed', label: 'Failed' },
-              { id: 'cancelled', label: 'Cancelled' }
-            ].map(tab => {
-              const isActive = state.activeTaskTab === tab.id;
-              return `
-                <button onclick="setTaskTab('${tab.id}')" class="pb-3 text-xs font-semibold relative whitespace-nowrap px-1 ${isActive ? 'text-blue-500 font-bold' : 'text-gray-400 hover:text-gray-200'}">
-                  ${tab.label}
-                  <div class="absolute bottom-0 left-0 w-full h-[2px] bg-blue-500 rounded-t-full ${isActive ? '' : 'hidden'}"></div>
-                </button>
-              `;
-            }).join('')}
-          </div>
-
-          <!-- Metrics Row (Using secure border-[#1b253b]) -->
-          <div class="grid grid-cols-5 gap-1.5 px-4 shrink-0">
-            <!-- Box 1: All -->
-            <div onclick="setTaskTab('all')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'all' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
-              <div class="flex items-center gap-1 justify-center">
-                <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-blue-500 shrink-0"></i>
-                <span class="text-sm font-bold text-white">48</span>
-              </div>
-              <span class="text-[8.5px] text-gray-400 font-medium mt-1 whitespace-nowrap">All Tasks</span>
-            </div>
-            <!-- Box 2: In Progress -->
-            <div onclick="setTaskTab('progress')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'progress' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
-              <div class="flex items-center gap-1 justify-center">
-                <i data-lucide="play-circle" class="w-3.5 h-3.5 text-blue-400 shrink-0"></i>
-                <span class="text-sm font-bold text-white">12</span>
-              </div>
-              <span class="text-[8.5px] text-gray-400 font-medium mt-1 whitespace-nowrap">In Progress</span>
-            </div>
-            <!-- Box 3: Completed -->
-            <div onclick="setTaskTab('completed')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'completed' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
-              <div class="flex items-center gap-1 justify-center">
-                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-green-500 shrink-0"></i>
-                <span class="text-sm font-bold text-white">31</span>
-              </div>
-              <span class="text-[8.5px] text-gray-400 font-medium mt-1 whitespace-nowrap">Completed</span>
-            </div>
-            <!-- Box 4: Failed -->
-            <div onclick="setTaskTab('failed')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'failed' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
-              <div class="flex items-center gap-1 justify-center">
-                <i data-lucide="x-circle" class="w-3.5 h-3.5 text-red-500 shrink-0"></i>
-                <span class="text-sm font-bold text-white">3</span>
-              </div>
-              <span class="text-[8.5px] text-gray-400 font-medium mt-1 whitespace-nowrap">Failed</span>
-            </div>
-            <!-- Box 5: Cancelled -->
-            <div onclick="setTaskTab('cancelled')" class="bg-[#121929] rounded-xl p-2 border ${state.activeTaskTab === 'cancelled' ? 'border-blue-500/50 bg-[#16223f]' : 'border-[#1b253b]'} transition-all cursor-pointer flex flex-col justify-center items-center text-center">
-              <div class="flex items-center gap-1 justify-center">
-                <i data-lucide="minus-circle" class="w-3.5 h-3.5 text-gray-500 shrink-0"></i>
-                <span class="text-sm font-bold text-white">2</span>
-              </div>
-              <span class="text-[8.5px] text-gray-400 font-medium mt-1 whitespace-nowrap">Cancelled</span>
-            </div>
-          </div>
-
-          <!-- Sort & Export Actions Row (Perfect Alignment with image_50d9a8.jpg) -->
-          <div class="flex items-center justify-between px-4 py-3 text-xs text-gray-400 shrink-0 mt-2">
-            <div class="flex items-center gap-1.5 cursor-pointer hover:text-white transition-all" onclick="showToast('Sorting sequence toggled', 'info')">
-              <span>Sort by: <span class="text-gray-200 font-semibold">Created (Newest)</span></span>
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
-            </div>
-            <button onclick="showToast('Exporting task logs as CSV file format...', 'success')" class="flex items-center gap-1.5 bg-[#121929] hover:bg-[#1a233a] border border-[#161f30] rounded-lg px-2.5 py-1 text-gray-200 hover:text-white transition-all text-[11px] font-semibold">
-              <i data-lucide="share" class="w-3.5 h-3.5"></i>
-              <span>Export</span>
-            </button>
-          </div>
-
-          <!-- Tasks List Container with exact padding and border-[#1b253b] -->
-          <div class="flex-1 px-4 overflow-y-auto flex flex-col gap-3 pb-[90px] hide-scrollbar">
-            ${filteredTasks.length === 0 ? `
-              <div class="py-12 text-center text-xs text-gray-500">
-                <i data-lucide="info" class="w-8 h-8 mx-auto mb-2 text-gray-600"></i>
-                No tasks logged under this category
-              </div>
-            ` : filteredTasks.map(task => {
-              const statusPill = task.status === 'progress' ? '<span class="px-2 py-0.5 rounded bg-[#10b981]/15 text-[#10b981] font-bold text-[9px] whitespace-nowrap">In Progress</span>'
-                               : task.status === 'completed' ? '<span class="px-2 py-0.5 rounded bg-blue-500/15 text-blue-400 font-bold text-[9px] whitespace-nowrap">Completed</span>'
-                               : task.status === 'failed' ? '<span class="px-2 py-0.5 rounded bg-red-500/15 text-red-400 font-bold text-[9px] whitespace-nowrap">Failed</span>'
-                               : '<span class="px-2 py-0.5 rounded bg-gray-500/15 text-gray-400 font-bold text-[9px] whitespace-nowrap">Cancelled</span>';
+            <!-- Zoom & Pan SVG container -->
+            <div class="absolute inset-0 w-full h-full flex items-center justify-center select-none pointer-events-none" style="transform-origin: center center; transition: transform 0.1s ease-out;" id="interactive-map-group">
               
-              return `
-                <div onclick="selectTask('${task.id}')" class="bg-[#121929] rounded-2xl border border-[#1b253b] p-4 flex items-start gap-3.5 relative transition-all duration-300 hover:bg-[#161e31] cursor-pointer">
-                  <!-- Green circle with white service dome bell icon representing Room Service delivery -->
-                  <div class="w-10 h-10 rounded-full bg-[#10b981] flex items-center justify-center text-white shrink-0 shadow-lg shadow-[#10b981]/20">
-                    <i data-lucide="bell" class="w-5 h-5"></i>
+              <svg viewBox="0 0 400 400" class="w-[92%] h-[92%] opacity-90">
+                <defs>
+                  <pattern id="radar-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#121a2e" stroke-width="0.75" />
+                  </pattern>
+                </defs>
+                
+                <!-- Floor grid -->
+                <rect width="400" height="400" fill="url(#radar-grid)" />
+
+                <!-- Vector CAD Blueprint Walls -->
+                <g stroke="#1b253b" stroke-width="1.5" fill="none">
+                  <path d="M 50 30 L 350 30 L 380 90 L 380 350 L 50 350 L 30 180 Z" stroke="#253556" stroke-width="2.5" />
+                  <rect x="55" y="70" width="70" height="90" />
+                  <rect x="170" y="120" width="60" height="90" stroke-width="2" />
+                  <rect x="290" y="45" width="80" height="60" />
+                  <rect x="290" y="125" width="80" height="40" />
+                  <rect x="260" y="220" width="110" height="120" />
+                  <rect x="55" y="240" width="90" height="100" />
+                </g>
+
+                <!-- Zone Labels -->
+                <g fill="#1c2b48" font-size="8" font-family="sans-serif" font-weight="900" text-anchor="middle" letter-spacing="1">
+                  <text x="90" y="115">LOBBY</text>
+                  <text x="200" y="160">ELEVATOR<tspan x="200" y="170">LOBBY</tspan></text>
+                  <text x="330" y="80">CONCIERGE</text>
+                  <text x="330" y="148">BAR</text>
+                  <text x="100" y="295">RESTAURANT</text>
+                  <text x="315" y="280">BALLROOM</text>
+                </g>
+
+                <!-- Route Paths -->
+                <path d="M 195 60 C 130 60 130 115 130 200 C 130 230 192 230 192 200" fill="none" stroke="#2563eb" stroke-dasharray="6,4" stroke-width="2" class="animate-dash" id="active-task-line-blue" />
+                <path d="M 270 120 L 270 250" fill="none" stroke="#10b981" stroke-dasharray="6,4" stroke-width="1.5" class="animate-dash" id="active-task-line-green" />
+                <path d="" fill="none" stroke="#3b82f6" stroke-dasharray="5,5" stroke-width="2.5" class="animate-pulse hidden" id="dynamic-dispatch-route" />
+
+                <!-- Location radar pulse -->
+                <g transform="translate(230, 180)">
+                  <circle cx="0" cy="0" r="16" fill="rgba(59,130,246,0.15)" class="radar-pulse" />
+                  <circle cx="0" cy="0" r="32" fill="rgba(59,130,246,0.08)" class="radar-pulse" style="animation-delay: 1.2s" />
+                  <path d="M 0 -10 C -5 -10 -8 -6 -8 -1 C -8 4 -1 10 0 11 C 1 10 8 4 8 -1 C 8 -6 5 -10 0 -10 Z" fill="#2563eb" />
+                  <circle cx="0" cy="-1" r="2.5" fill="white" />
+                </g>
+              </svg>
+
+              <!-- Dynamic Robot Markers layer -->
+              <div id="live-map-robots-container" class="absolute inset-0 pointer-events-none"></div>
+
+            </div>
+
+            <!-- Floating Sidebar Map Actions -->
+            <div class="absolute right-4 top-24 flex flex-col gap-2.5 z-20 pointer-events-auto">
+              <button onclick="resetMapTransform()" class="w-10 h-10 bg-[#121929]/90 backdrop-blur-md border border-slate-800 rounded-xl flex items-center justify-center text-gray-300 hover:text-white transition-all shadow-lg active:scale-95">
+                <i data-lucide="locate-fixed" class="w-5 h-5 text-blue-500"></i>
+              </button>
+              <button onclick="showToast('三维视图正在渲染准备中...', 'info')" class="w-10 h-10 bg-[#121929]/90 backdrop-blur-md border border-slate-800 rounded-xl flex items-center justify-center text-xs font-black text-blue-400 hover:text-white transition-all shadow-lg active:scale-95">
+                3D
+              </button>
+              <button onclick="zoomMap(1.2)" class="w-10 h-10 bg-[#121929]/90 backdrop-blur-md border border-slate-800 rounded-xl flex items-center justify-center text-gray-300 hover:text-white transition-all shadow-lg active:scale-95">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+              </button>
+              <button onclick="zoomMap(0.8)" class="w-10 h-10 bg-[#121929]/90 backdrop-blur-md border border-slate-800 rounded-xl flex items-center justify-center text-gray-300 hover:text-white transition-all shadow-lg active:scale-95">
+                <i data-lucide="minus" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- 2. FLOATING HEADS-UP OVERLAY (HUD挂载层，pointer-events-none 避免阻挡下方地图手势) -->
+          <div class="absolute inset-0 pointer-events-none z-20 flex flex-col justify-between">
+            
+            <!-- TOP FLOATING BAR (Header + Floor Selection + Legend) -->
+            <div class="w-full flex flex-col pointer-events-auto bg-gradient-to-b from-[#070b14]/95 via-[#070b14]/85 to-transparent pb-4">
+              <!-- Header -->
+              <header class="px-4 pt-12 pb-3 flex items-center justify-between border-b border-slate-900/10">
+                <button onclick="goBack()" class="p-1.5 bg-[#121929]/40 backdrop-blur-md border border-slate-800/40 rounded-full transition-colors">
+                  <i data-lucide="arrow-left" class="w-5.5 h-5.5 text-gray-300"></i>
+                </button>
+                <h1 class="text-sm font-bold text-gray-100 tracking-wide bg-[#121929]/40 backdrop-blur-md px-4 py-1.5 border border-slate-800/40 rounded-full">Live Map & Navigation</h1>
+                <button onclick="showToast('Map rendering configs...', 'info')" class="p-1.5 bg-[#121929]/40 backdrop-blur-md border border-slate-800/40 rounded-full transition-colors">
+                  <i data-lucide="more-horizontal" class="w-5.5 h-5.5 text-gray-300"></i>
+                </button>
+              </header>
+
+              <!-- Floor Dropdown & Layer Button Row -->
+              <div class="px-4 py-1.5 flex gap-2.5 justify-between items-center">
+                <button onclick="showToast('Floor selectors loaded', 'info')" class="flex-1 flex items-center justify-between bg-[#121929]/90 backdrop-blur-md border border-slate-800/60 px-4 py-2.5 rounded-xl text-xs text-gray-200">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="building" class="w-4 h-4 text-blue-500"></i>
+                    <span class="font-bold">${state.activeFloor}</span>
                   </div>
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                </button>
+                <button onclick="showToast('Cloud LIDAR laser rendering active...', 'info')" class="flex items-center gap-2 bg-[#121929]/90 backdrop-blur-md border border-slate-800/60 px-4 py-2.5 rounded-xl text-xs text-gray-200">
+                  <i data-lucide="layers" class="w-4 h-4 text-blue-500"></i>
+                  <span class="font-bold">Layers</span>
+                </button>
+              </div>
 
-                  <!-- Task Card Content Details -->
-                  <div class="flex-1 min-w-0 pr-12">
-                    <h3 class="text-sm font-bold text-white tracking-wide">${task.id}</h3>
-                    <p class="text-[11px] text-gray-400 mb-2 font-semibold">${task.type}</p>
+              <!-- Mini Legend Row -->
+              <div class="px-4 py-1.5 flex overflow-x-auto gap-4 hide-scrollbar text-[9px] text-gray-400">
+                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span><span>Online</span></div>
+                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span><span>Busy</span></div>
+                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]"></span><span>Charging</span></div>
+                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span><span>Offline</span></div>
+                <div class="flex items-center gap-1.5"><div class="w-4 h-0.5 border-t-2 border-dashed border-blue-500"></div><span>Task Route</span></div>
+              </div>
+            </div>
 
-                    <!-- Route Details -->
-                    <div class="text-[11px] text-gray-400 font-medium space-y-0.5">
-                      <div>From: <span class="text-gray-200 font-semibold">${task.from}</span></div>
-                      <div>To: <span class="text-gray-200 font-semibold">${task.to}</span></div>
+            <!-- BOTTOM FLOATING BAR (Interactive Controls Cards & Bottom Tab Nav) -->
+            <div class="w-full flex flex-col pointer-events-auto bg-gradient-to-t from-[#070b14]/95 via-[#070b14]/90 to-transparent pt-4 pb-safe">
+              
+              <!-- Banner for Dispatch Mode Target Selection -->
+              <div id="dispatch-mode-banner" class="hidden mx-4 mb-3 bg-blue-600/95 backdrop-blur-md border border-blue-400 p-3 rounded-2xl flex items-center justify-between text-xs shadow-[0_12px_24px_rgba(37,99,235,0.3)] animate-pulse">
+                <span class="font-semibold flex items-center gap-1.5"><i data-lucide="compass" class="w-4 h-4 animate-spin"></i> 请在地图上任意位置规划终点航向点</span>
+                <button onclick="state.isDispatchMode=false; document.getElementById('dispatch-mode-banner').classList.add('hidden')" class="bg-black/40 px-2.5 py-1 rounded-lg text-[9px] font-extrabold uppercase text-white hover:bg-black/60 transition-colors">取消</button>
+              </div>
+
+              <!-- Floating Selected Robot Details Panel (Card floats on map) -->
+              <div class="bg-[#121929]/95 backdrop-blur-md border border-[#1b253b] mx-4 my-1.5 p-4 rounded-3xl shadow-[0_15px_30px_rgba(0,0,0,0.5)]" id="selected-robot-card-panel">
+                <!-- Programmatically rendered -->
+              </div>
+
+              <!-- Floating Compact Navigation Controls Panel -->
+              <div class="bg-[#121929]/95 backdrop-blur-md border border-[#1b253b] mx-4 mb-3 p-3.5 rounded-3xl shadow-[0_15px_30px_rgba(0,0,0,0.5)]">
+                <h3 class="text-gray-400 font-extrabold text-[9px] uppercase tracking-wider mb-2.5 px-1 flex items-center gap-1">
+                  <span class="w-1 h-2 bg-blue-500 rounded-full"></span> Navigation Controls
+                </h3>
+                
+                <div class="grid grid-cols-5 gap-1.5 text-center font-semibold">
+                  <button onclick="triggerDispatchMode()" class="flex flex-col items-center gap-1">
+                    <div class="w-11 h-11 bg-white/5 border border-slate-800 rounded-2xl flex items-center justify-center text-gray-300 hover:text-white transition-colors active:scale-95 shrink-0">
+                      <i data-lucide="navigation-2" class="w-5.5 h-5.5 text-blue-500 animate-pulse"></i>
                     </div>
+                    <span class="text-[9px] text-gray-400 font-medium">Dispatch</span>
+                  </button>
 
-                    <!-- Action Badges Footer -->
-                    <div class="flex items-center gap-2 mt-3.5 flex-wrap">
-                      ${statusPill}
-                      <div class="flex items-center gap-1 text-[10px] text-gray-300 font-semibold bg-[#161f30] border border-slate-800/80 px-2 py-0.5 rounded-md">
-                        <i data-lucide="bot" class="w-3 h-3 text-blue-400"></i>
-                        <span>${task.robot}</span>
-                      </div>
-                      ${task.eta ? `<span class="text-[10px] text-[#10b981] font-bold">ETA: ${task.eta}</span>` : ''}
+                  <button onclick="togglePauseNavigation()" id="pause-nav-btn" class="flex flex-col items-center gap-1">
+                    <div class="w-11 h-11 bg-white/5 border border-slate-800 rounded-2xl flex items-center justify-center text-gray-300 hover:text-white transition-colors active:scale-95 shrink-0">
+                      <i data-lucide="pause" class="w-5.5 h-5.5"></i>
                     </div>
-                  </div>
+                    <span class="text-[9px] text-gray-400 font-medium">Pause</span>
+                  </button>
 
-                  <!-- Right Timestamp & chevron alignment -->
-                  <div class="absolute right-4 top-4 text-right">
-                    <span class="text-[10px] text-gray-500 font-bold whitespace-nowrap">${task.time}</span>
-                  </div>
-                  <div class="absolute right-4 top-1/2 -translate-y-1/2">
-                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
-                  </div>
+                  <button onclick="openRobotCallIntercom()" class="flex flex-col items-center gap-1">
+                    <div class="w-11 h-11 bg-white/5 border border-slate-800 rounded-2xl flex items-center justify-center text-gray-300 hover:text-white transition-colors active:scale-95 shrink-0">
+                      <i data-lucide="phone" class="w-5.5 h-5.5 text-green-500 animate-pulse"></i>
+                    </div>
+                    <span class="text-[9px] text-gray-400 font-medium">VOIP Call</span>
+                  </button>
+
+                  <button onclick="triggerReturnToBase()" class="flex flex-col items-center gap-1">
+                    <div class="w-11 h-11 bg-white/5 border border-slate-800 rounded-2xl flex items-center justify-center text-gray-300 hover:text-white transition-colors active:scale-95 shrink-0">
+                      <i data-lucide="home" class="w-5.5 h-5.5 text-indigo-400"></i>
+                    </div>
+                    <span class="text-[9px] text-gray-400 font-medium">Return</span>
+                  </button>
+
+                  <button onclick="openLidarDiagnostic()" class="flex flex-col items-center gap-1">
+                    <div class="w-11 h-11 bg-white/5 border border-slate-800 rounded-2xl flex items-center justify-center text-gray-300 hover:text-white transition-colors active:scale-95 shrink-0">
+                      <i data-lucide="compass" class="w-5.5 h-5.5 text-orange-500 animate-spin" style="animation-duration: 4s;"></i>
+                    </div>
+                    <span class="text-[9px] text-gray-400 font-medium">Sensors</span>
+                  </button>
                 </div>
-              `;
-            }).join('')}
+              </div>
+
+              <!-- Integrated App Navigation Bar -->
+              <nav class="bg-[#070b14]/90 backdrop-blur-md border-t border-slate-900/60 px-1 pt-1.5 flex justify-between items-end shrink-0">
+                <button onclick="navigate('dashboard')" class="flex-1 flex flex-col items-center justify-center gap-1 py-1 text-gray-500 hover:text-gray-300">
+                  <i data-lucide="home" class="w-4.5 h-4.5"></i>
+                  <span class="text-[8.5px] font-medium whitespace-nowrap">Dashboard</span>
+                </button>
+                <button onclick="navigate('robots')" class="flex-1 flex flex-col items-center justify-center gap-1 py-1 text-blue-500 bg-blue-900/20 rounded-xl mb-0.5">
+                  <i data-lucide="bot" class="w-4.5 h-4.5"></i>
+                  <span class="text-[8.5px] font-medium whitespace-nowrap">Robots</span>
+                </button>
+                <button onclick="openDispatchModal()" class="flex-1 flex flex-col items-center justify-center gap-1 py-1 text-gray-500">
+                  <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-[0_2px_10px_rgba(37,99,235,0.4)]">
+                    <i data-lucide="plus" class="w-4.5 h-4.5"></i>
+                  </div>
+                  <span class="text-[8.5px] font-medium whitespace-nowrap">Create</span>
+                </button>
+                <button onclick="navigate('tasks')" class="flex-1 flex flex-col items-center justify-center gap-1 py-1 relative text-gray-500">
+                  <div class="absolute top-0 right-[20%] bg-red-500 text-white text-[8px] font-bold px-1 rounded-full">16</div>
+                  <i data-lucide="clipboard-list" class="w-4.5 h-4.5"></i>
+                  <span class="text-[8.5px] font-medium whitespace-nowrap">Tasks</span>
+                </button>
+                <button onclick="navigate('settings')" class="flex-1 flex flex-col items-center justify-center gap-1 py-1 text-gray-500">
+                  <i data-lucide="more-horizontal" class="w-4.5 h-4.5"></i>
+                  <span class="text-[8.5px] font-medium whitespace-nowrap">More</span>
+                </button>
+              </nav>
+
+            </div>
           </div>
 
         </div>
       `;
 
-      lucide.createIcons({ node: container });
+      // Complete layout rendering
+      renderLiveMapPanel();
+      renderLiveMapOverlayRobots();
+    }
+
+    // Set Map into Navigation dispatch destination placement state
+    function triggerDispatchMode() {
+      state.isDispatchMode = true;
+      const banner = document.getElementById('dispatch-mode-banner');
+      if (banner) banner.classList.remove('hidden');
+      showToast('目标调度模式开启。点击地图上任意位置来进行路径规划派遣。', 'info');
+    }
+
+    // Move Selected Robot back to charging base station
+    function triggerReturnToBase() {
+      const activeBot = state.robots[state.highlightIdx];
+      showToast('计算返航路线...已锁定充电底座。', 'info');
+
+      // Base coordinates on map
+      const baseX = 70;
+      const baseY = 26;
+
+      setTimeout(() => {
+        let steps = 0;
+        const startX = activeBot.x;
+        const startY = activeBot.y;
+        
+        const interval = setInterval(() => {
+          if (state.isNavigationPaused) return;
+          steps++;
+          const t = steps / 20;
+          activeBot.x = startX + (baseX - startX) * t;
+          activeBot.y = startY + (baseY - startY) * t;
+          activeBot.heading = Math.atan2(baseY - startY, baseX - startX) * (180 / Math.PI);
+          
+          renderLiveMapOverlayRobots();
+          
+          if (steps >= 20) {
+            clearInterval(interval);
+            activeBot.status = "charging";
+            activeBot.activity = "Charging";
+            activeBot.location = "1F - Charging Station";
+            renderLiveMapPanel();
+            renderLiveMapOverlayRobots();
+            showToast('R2-03 已安全返航对接至充电座。', 'success');
+          }
+        }, 1500 / 20);
+      }, 1000);
+    }
+
+    // Renders Selected Robot Card Panel matching 1:1 image_52a3ca.jpg
+    function renderLiveMapPanel() {
+      const activeBot = state.robots[state.highlightIdx];
+      const panel = document.getElementById('selected-robot-card-panel');
+      if (!panel) return;
+
+      const statusCol = activeBot.status === 'online' ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                       : activeBot.status === 'busy' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+                       : activeBot.status === 'charging' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' 
+                       : 'bg-red-500/10 text-red-400 border-red-500/20';
+
+      panel.innerHTML = `
+        <div class="flex items-center justify-between mb-2 shrink-0">
+          <span class="text-gray-400 font-extrabold text-[9px] uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Selected Robot</span>
+          <i data-lucide="chevron-up" class="w-4 h-4 text-gray-500"></i>
+        </div>
+
+        <div class="flex items-center gap-3.5">
+          <!-- Robot premium render SVG -->
+          <div class="w-14 h-16 shrink-0">
+            ${getPremiumRobotSVG(activeBot.status)}
+          </div>
+
+          <div class="flex-1 space-y-1.5 text-xs">
+            <div class="flex items-center gap-2 mb-1">
+              <h2 class="text-sm font-black text-white leading-none">${activeBot.id}</h2>
+              <span class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] border ${statusCol}">
+                <span class="w-1 h-1 rounded-full ${activeBot.status === 'online' ? 'bg-green-500' : activeBot.status === 'busy' ? 'bg-blue-500' : activeBot.status === 'charging' ? 'bg-yellow-500' : 'bg-red-500'}"></span>
+                <span class="capitalize font-bold text-[8px]">${activeBot.status}</span>
+              </span>
+            </div>
+
+            <div class="grid grid-cols-[55px_1fr] gap-x-1.5 gap-y-0.5 font-bold text-[10px] text-gray-400">
+              <span>Status</span>
+              <span class="text-gray-200">Online</span>
+              
+              <span>En Route</span>
+              <span class="text-gray-200 truncate w-32">to Room 1205 (12F)</span>
+
+              <span>Battery</span>
+              <div class="flex items-center gap-1.5">
+                <span class="text-gray-200 font-mono text-[9px] w-6">${Math.round(activeBot.battery)}%</span>
+                <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-green-500 rounded-full" style="width: ${activeBot.battery}%"></div>
+                </div>
+              </div>
+
+              <span>ETA</span>
+              <span class="text-[#10b981] font-black">2 min</span>
+            </div>
+          </div>
+
+          <!-- Go to Robot Trigger Button -->
+          <div class="flex flex-col gap-1.5 shrink-0">
+            <button onclick="recenterMapViewOnRobot('${activeBot.id}')" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black flex items-center gap-1 shadow-lg shadow-blue-500/10 active:scale-95 transition-all">
+              <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
+              <span>Re-center</span>
+            </button>
+            <button onclick="triggerDispatchMode()" class="px-3 py-2 bg-transparent border border-slate-800 hover:bg-white/5 text-gray-300 rounded-xl text-[10px] font-black flex items-center gap-1 active:scale-95 transition-all">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-gray-400"></i>
+              <span>Waypoint</span>
+            </button>
+          </div>
+        </div>
+      `;
+      lucide.createIcons({ node: panel });
+    }
+
+    // Pans and scales viewport instantly to the selected robot coordinates
+    function recenterMapViewOnRobot(robotId) {
+      const robot = state.robots.find(r => r.id === robotId);
+      if (robot) {
+        state.mapZoom = 1.6;
+        const container = document.getElementById('navigation-map-wrapper');
+        if (container) {
+          const w = container.clientWidth;
+          const h = container.clientHeight;
+          state.mapPanX = -(robot.x - 50) * 0.01 * w * state.mapZoom;
+          state.mapPanY = -(robot.y - 50) * 0.01 * h * state.mapZoom;
+          applyMapTransform();
+          showToast(`已将视角锁定至机器人 ${robot.id}`, 'success');
+        }
+      }
+    }
+
+    // Redraws robot markers onto the live blueprint map inside live map view
+    function renderLiveMapOverlayRobots() {
+      const overlay = document.getElementById('live-map-robots-container');
+      if (!overlay) return;
+
+      overlay.innerHTML = state.robots.map((robot, rIdx) => {
+        const isCurrentHighlight = rIdx === state.highlightIdx;
+        
+        let glowColor = '';
+        let iconColor = '';
+        if (robot.status === 'online') {
+          glowColor = 'bg-green-500/20 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.35)]';
+          iconColor = 'text-green-400';
+        } else if (robot.status === 'busy') {
+          glowColor = 'bg-blue-500/20 border-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.35)]';
+          iconColor = 'text-blue-400';
+        } else if (robot.status === 'charging') {
+          glowColor = 'bg-yellow-500/20 border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.25)]';
+          iconColor = 'text-yellow-400';
+        } else {
+          glowColor = 'bg-red-500/20 border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.35)]';
+          iconColor = 'text-red-400';
+        }
+
+        return `
+          <div onclick="changeHighlight(${rIdx})" class="absolute flex flex-col items-center transition-all duration-1000 ease-linear cursor-pointer pointer-events-auto" style="top: ${robot.y}%; left: ${robot.x}%; transform: translate(-50%, -50%)">
+            <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center ${glowColor} ${isCurrentHighlight ? 'ring-2 ring-white scale-110' : ''}">
+              <i data-lucide="bot" class="w-4 h-4 ${iconColor}"></i>
+              ${robot.status === 'offline' ? `<div class="absolute -right-2 -top-1 w-4.5 h-4.5 bg-[#0a101d] rounded-full border border-red-500 flex items-center justify-center shadow-lg"><i data-lucide="alert-triangle" class="w-3 h-3 text-red-500"></i></div>` : ''}
+            </div>
+            <span class="text-[8px] font-extrabold mt-1 bg-[#070b14]/95 border border-slate-800/80 px-1 rounded transition-colors ${iconColor}">${robot.id}</span>
+          </div>
+        `;
+      }).join('');
+      
+      lucide.createIcons({ node: overlay });
+    }
+
+    // Drag-to-pan handlers for architectural map inside live map view
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragDistance = 0;
+
+    function startMapDragging(e) {
+      isDragging = true;
+      dragDistance = 0;
+      dragStartX = e.clientX - state.mapPanX;
+      dragStartY = e.clientY - state.mapPanY;
+    }
+
+    function onMapDragging(e) {
+      if (!isDragging) return;
+      dragDistance += Math.abs(e.movementX || 0) + Math.abs(e.movementY || 0);
+      state.mapPanX = e.clientX - dragStartX;
+      state.mapPanY = e.clientY - dragStartY;
+      applyMapTransform();
+    }
+
+    function startMapDraggingTouch(e) {
+      isDragging = true;
+      dragDistance = 0;
+      const touch = e.touches[0];
+      dragStartX = touch.clientX - state.mapPanX;
+      dragStartY = touch.clientY - state.mapPanY;
+    }
+
+    function onMapDraggingTouch(e) {
+      if (!isDragging) return;
+      const touch = e.touches[0];
+      state.mapPanX = touch.clientX - dragStartX;
+      state.mapPanY = touch.clientY - dragStartY;
+      applyMapTransform();
+    }
+
+    function stopMapDragging() {
+      isDragging = false;
     }
 
     function renderSettings(container) {
