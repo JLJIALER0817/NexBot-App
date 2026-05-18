@@ -454,7 +454,7 @@
       metrics: { total: 24, online: 18, active: 16, completed: 128, battery: 78, alerts: 8 },
       tasks: { inProgress: 16, pending: 12, completed: 128, failed: 4, cancelled: 2 },
       robots: [
-        { id: 'R2-03', status: 'online', x: 46, y: 24, battery: 86, location: 'Hotel Lobby â€¢ Floor 1', activity: 'Delivering', heading: 120, coords: {x: 12.45, y: 8.32}, voltage: 24.6, temp: 31, payload: 5.2, uptimeMinutes: 3752 },
+        { id: 'R2-03', status: 'online', x: 46, y: 24, battery: 86, location: 'Hotel Lobby Floor 1', activity: 'Delivering', heading: 120, coords: {x: 12.45, y: 8.32}, voltage: 24.6, temp: 31, payload: 5.2, uptimeMinutes: 3752 },
         { id: 'R1-04', status: 'busy', x: 36, y: 30, battery: 42, location: '1F - Lobby', activity: 'Cleaning', heading: 45, coords: {x: 8.12, y: 15.4}, voltage: 23.1, temp: 34, payload: 1.2, uptimeMinutes: 1420 },
         { id: 'R1-01', status: 'charging', x: 70, y: 26, battery: 12, location: '1F - Charging Station', activity: 'Charging', heading: 0, coords: {x: 2.5, y: 2.5}, voltage: 26.2, temp: 38, payload: 0, uptimeMinutes: 8500 },
         { id: 'R1-05', status: 'offline', x: 13, y: 33, battery: 5, location: '1F - Storage', activity: 'Offline', heading: 180, coords: {x: 0, y: 0}, voltage: 21.0, temp: 22, payload: 0, uptimeMinutes: 0 },
@@ -841,7 +841,7 @@
             
             if (steps >= 20) {
               clearInterval(interval);
-              robot.location = "First Floor â€¢ Zone X";
+              robot.location = "First Floor Zone X";
               robot.activity = "Standby";
               routePath.classList.add('hidden');
               showToast('R2-03 has safely arrived at the target area!', 'success');
@@ -1487,7 +1487,7 @@
                       <div id="highlight-battery-bar" class="h-full rounded-full bg-green-500 transition-all duration-500" style="width: 86%"></div>
                     </div>
                   </div>
-                  <span class="text-gray-500 font-medium">Location</span><span id="highlight-location" class="text-gray-200 font-semibold truncate">Hotel Lobby â€¢ Floor 1</span>
+                  <span class="text-gray-500 font-medium">Location</span><span id="highlight-location" class="text-gray-200 font-semibold truncate">Hotel Lobby Floor 1</span>
                   <span class="text-gray-500 font-medium">Status</span><span id="highlight-activity" class="text-gray-200 font-semibold truncate">Delivering</span>
                 </div>
               </div>
@@ -1885,7 +1885,7 @@
                         <span class="capitalize text-[8px] font-bold">Online</span>
                       </div>
                     </div>
-                    <p id="details-location" class="text-[11px] text-gray-400 font-medium truncate">Hotel Lobby â€¢ Floor 1</p>
+                    <p id="details-location" class="text-[11px] text-gray-400 font-medium truncate">Hotel Lobby Floor 1</p>
                   </div>
                   
                   <div class="flex gap-1.5 mobile-gap-reduction">
@@ -2315,7 +2315,7 @@
 
       if (state.activeTelemetryTab === 'Overview') {
         const detailsHeading = document.getElementById('details-heading');
-        if (detailsHeading) detailsHeading.textContent = `${Math.round(highlightedRobot.heading)}Â° SE`;
+        if (detailsHeading) detailsHeading.textContent = `${Math.round(highlightedRobot.heading)} SE`;
 
         const detailsCoords = document.getElementById('details-coords');
         if (detailsCoords) {
