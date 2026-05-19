@@ -795,62 +795,85 @@
       }
     }
 
-    // Handle dispatch target click inside live map view
+// Handle dispatch target click inside live map view
     function handleMapClick(e) {
       if (dragDistance > 5) return; // Dragging - do not place waypoint
       if (!state.isDispatchMode) return;
       
       const mapContainer = document.getElementById('navigation-map-wrapper');
       const rect = mapContainer.getBoundingClientRect();
+      // 获取点击在 0-100 之间的百分比坐标
       const x = ((e.clientX - rect.left - state.mapPanX) / state.mapZoom / rect.width) * 100;
       const y = ((e.clientY - rect.top - state.mapPanY) / state.mapZoom / rect.height) * 100;
 
-      // Draw custom route dynamically
       state.dispatchTarget = { x, y };
       state.isDispatchMode = false;
 
-      // Update R2-03 trajectory simulation
-      const rIdx = state.robots.findIndex(r => r.id === 'R2-03');
+      // 【修改点1】：获取当前正在高亮/选中的机器人，而不是写死 R2-03
+      const rIdx = state.highlightIdx; 
+      
       if (rIdx !== -1) {
         const robot = state.robots[rIdx];
-        showToast('In calculating the latest safe obstacle avoidance path...', 'info');
         
-        // Push destination point
+        // 改变状态为忙碌
+        robot.status = 'busy';
+        renderLiveMapPanel(); // 刷新底部卡片状态
+        
+        showToast(`正在计算 ${robot.id} 的最新安全避障路径...`, 'info');
+        
+        // 【修改点2】：修复 SVG 路径坐标。因为地图 viewBox 是 400x400，所以 0-100 的百分比要乘以 4
         const routePath = document.getElementById('dynamic-dispatch-route');
         if (routePath) {
-          routePath.setAttribute('d', `M ${robot.x}% ${robot.y}% Q ${(robot.x + x)/2}% ${(robot.y + y)/2 - 10}% ${x}% ${y}%`);
+          const svgX = x * 4;
+          const svgY = y * 4;
+          const svgRobotX = robot.x * 4;
+          const svgRobotY = robot.y * 4;
+          
+          routePath.setAttribute('d', `M ${svgRobotX} ${svgRobotY} Q ${(svgRobotX + svgX)/2} ${(svgRobotY + svgY)/2 - 40} ${svgX} ${svgY}`);
           routePath.classList.remove('hidden');
         }
 
+        // 模拟寻路和移动动画
         setTimeout(() => {
-          showToast('Nexbot has started and is en route to the specified destination....', 'success');
+          showToast(`${robot.id} 已启动，正在前往指定目标点...`, 'success');
           
           let steps = 0;
           const startX = robot.x;
           const startY = robot.y;
+          
           const interval = setInterval(() => {
-            if (state.isNavigationPaused) return; // If paused, hold position
+            if (state.isNavigationPaused) return; // 支持暂停功能
+            
             steps++;
-            const t = steps / 20;
+            const t = steps / 20; // 20步完成动画
+            
+            // 更新机器人坐标
             robot.x = startX + (x - startX) * t;
             robot.y = startY + (y - startY) * t;
+            
+            // 调整机器人朝向 (Heading)
             robot.heading = Math.atan2(y - startY, x - startX) * (180 / Math.PI);
             
-            // Redraw
+            // 触发重新渲染地图上的所有机器人
             renderLiveMapOverlayRobots();
             
             if (steps >= 20) {
               clearInterval(interval);
-              robot.location = "First Floor Zone X";
+              robot.location = "Custom Target Zone"; // 更新到达位置
               robot.activity = "Standby";
-              routePath.classList.add('hidden');
-              showToast('R2-03 has safely arrived at the target area!', 'success');
+              robot.status = 'online'; // 恢复在线状态
+              
+              if(routePath) routePath.classList.add('hidden');
+              showToast(`${robot.id} 已安全抵达目标区域！`, 'success');
+              
+              // 刷新卡片数据
+              renderLiveMapPanel(); 
             }
-          }, 200);
+          }, 200); // 移动速度
         }, 1500);
       }
       
-      // Update Banner UI
+      // 隐藏顶部的提示 Banner
       const banner = document.getElementById('dispatch-mode-banner');
       if (banner) banner.classList.add('hidden');
     }
@@ -3951,9 +3974,37 @@
       `;
     }
 
-    // Begin standard lifecycle operations
+    // 1. 新增一个生成 Demo 提示弹窗的函数
+    function showDemoModal() {
+      const modal = document.createElement('div');
+      modal.id = 'demo-modal';
+      // 使用 z-[100] 确保它覆盖在所有元素（包括顶部导航栏）之上
+      modal.className = 'absolute inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-slide-in';
+      modal.innerHTML = `
+        <div class="bg-[#0d1321] border border-blue-500/30 rounded-3xl max-w-sm w-full p-6 text-center shadow-[0_0_40px_rgba(37,99,235,0.2)]">
+          <div class="w-16 h-16 bg-blue-500/10 border border-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="sparkles" class="w-8 h-8 text-blue-500"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white mb-2">Nexbot Demo App</h2>
+          <p class="text-sm text-gray-400 mb-6 leading-relaxed">
+            Demo mode is ready.<br>
+            Please note that this is a UI concept and interaction demo version. All device states, map coordinates, and task data within the system are simulated.
+          </p>
+          <button onclick="document.getElementById('demo-modal').remove(); showToast('Demo mode is ready.', 'info');" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95">
+            I understand.
+          </button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      // 渲染弹窗里的 Lucide 图标
+      lucide.createIcons({ node: modal });
+    }
+
+    // 2. 修改你原有的 window.onload，让它在渲染 App 后调用弹窗
     window.onload = function() {
       renderApp();
+      // 延迟 400 毫秒弹出，给背景页面一个加载和渲染的视觉缓冲期，体验更高级
+      setTimeout(showDemoModal, 400);
     }
   </script>
 </body>
